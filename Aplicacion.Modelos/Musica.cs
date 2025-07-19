@@ -1,5 +1,9 @@
-﻿using System;
+﻿using Aplicacion.Modelos.Favorite;
+using Aplicacion.Modelos.Identity;
+using Aplicacion.Modelos.Implementations;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,26 +13,38 @@ namespace Aplicacion.Modelos
     public class Musica
     {
         public int Id { get; set; }
-        public string Titulo { get; set; }
-        public string RutaArchivo { get; set; }
-        public string Duracion { get; set; }
-        public DateTime FechaSubida { get; set; }
-        public string? Letra { get; set; }
-        public bool EsActiva { get; set; }
-        public double CalificacionPromedio { get; set; }
-        public int TotalCalificaciones { get; set; }
-        public int Reproducciones { get; set; }
-        public int Descargas { get; set; }
+        public string Title { get; set; }
+        public string? Duration { get; set; }
+        public MusicalGenre Genre { get; set; }
+        public DateTime UploadDate { get; set; } = DateTime.Now;
+        public string? Description { get; set; }
+        public string FilePath { get; set; }
 
-        // Foreign Keys
-        public string ArtistaId { get; set; }
-        public int? AlbumId { get; set; }
 
-        // Relaciones
-        public User Artista { get; set; }
-        public Album Album { get; set; }
-        public List<PlaylistMusica>? PlaylistMusicas { get; set; }
-        public List<FavoritoMusica>? FavoritoMusicas { get; set; }
-        public List<Calificacion>? Calificaciones { get; set; }
+
+        public int ArtistId { get; set; } // Arist
+        public int? AlbumId { get; set; } //Album
+
+        public User? Artist { get; set; }
+        public Album? Album { get; set; }
+        public List<PlaylistMusica>? PlaylistMusics { get; set; }
+        public List<FavoritoMusica>? FavoriteMusics { get; set; }
+        public List<Download>? Downloads { get; set; }
+
+
+        // enums of Genres
+        public enum MusicalGenre
+        {
+            Rock = 1,
+            Pop = 2,
+            Jazz = 3,
+            Blues = 4,
+            Classical = 5,
+            Electronic = 6,
+            HipHop = 7,
+            Country = 8
+
+
+        }
     }
 }

@@ -5,10 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Aplicacion.Modelos
+namespace Aplicacion.Modelos.Identity
 {
-    public class Role : IdentityRole
+    public class Role : IdentityRole<int>
     {
-        public string Descripcion { get; set; }
+        public string? Description { get; set; }
     }
 }

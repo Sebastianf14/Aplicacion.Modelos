@@ -1,23 +1,22 @@
-﻿using System;
+﻿using Aplicacion.Modelos.Identity;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Aplicacion.Modelos
+namespace Aplicacion.Modelos.Favorite
 {
-    public class PlaylistMusica
+    public class FavoritoMusica
     {
         public int Id { get; set; }
-
-        public int PlaylistId { get; set; }
-        public Playlist? Playlist { get; set; }
-
+        public int UserId { get; set; }
         public int MusicId { get; set; }
-        public Musica? Music { get; set; }
-
         public DateTime AddedDate { get; set; } = DateTime.Now;
-        public int Order { get; set; }
+
+        // Navegación
+        public User? User { get; set; }
+        public Musica? Music { get; set; }
     }
 }
