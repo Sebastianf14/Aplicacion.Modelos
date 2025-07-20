@@ -41,6 +41,23 @@ namespace Aplicacion.API.Consumer
             }
         }
 
+        public static List<T> GetBy(string campo, int id)
+        {
+            using (var client = new HttpClient())
+            {
+                var response = client.GetAsync($"{EndPoint}/{campo}/{id}").Result;
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = response.Content.ReadAsStringAsync().Result;
+                    return JsonConvert.DeserializeObject<List<T>>(json);
+                }
+                else
+                {
+                    throw new Exception($"Error: {response.StatusCode}");
+                }
+            }
+        }
+
         public static T Create(T item)
         {
             using (var client = new HttpClient())
