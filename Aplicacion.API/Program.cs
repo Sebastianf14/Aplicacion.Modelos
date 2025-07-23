@@ -1,5 +1,9 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Aplicacion.Modelos.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Identity;
 
 namespace Aplicacion.API
 {
@@ -9,14 +13,28 @@ namespace Aplicacion.API
         {
             var builder = WebApplication.CreateBuilder(args);
             builder.Services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("AppDbContext") ?? throw new InvalidOperationException("Connection string 'AppDbContext' not found.")));
+                options.UseSqlServer(builder.Configuration.GetConnectionString("AppDbContext")
+                ?? throw new InvalidOperationException("Connection string 'AppDbContext' not found.")));
 
-            // Add services to the container.
+            //Identity
+            //builder.Services.AddDefaultIdentity<User>()
+            //    .AddRoles<Role>()
+            //    .AddEntityFrameworkStores<AppDbContext>();
 
-            builder.Services.AddControllers();
+            //// Add services to the container.
+            //builder.Services
+            //.AddControllers()
+            //.AddNewtonsoftJson(
+            //    options => options.SerializerSettings.ReferenceLoopHandling
+            //    = Newtonsoft.Json.ReferenceLoopHandling.Ignore
+            //);
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+
+            builder.Services.AddSwaggerGen(c => {
+                c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
+                // Otra lógica personalizada si es necesario
+            });
 
             var app = builder.Build();
 
@@ -29,8 +47,9 @@ namespace Aplicacion.API
 
             app.UseHttpsRedirection();
 
-            app.UseAuthorization();
 
+            app.UseAuthentication();
+            app.UseAuthorization();
 
             app.MapControllers();
 
