@@ -13,21 +13,21 @@ namespace Aplicacion.API
         {
             var builder = WebApplication.CreateBuilder(args);
             builder.Services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("AppDbContext")
+                options.UseSqlServer(builder.Configuration.GetConnectionString("SqlConnection")
                 ?? throw new InvalidOperationException("Connection string 'AppDbContext' not found.")));
 
             //Identity
-            //builder.Services.AddDefaultIdentity<User>()
-            //    .AddRoles<Role>()
-            //    .AddEntityFrameworkStores<AppDbContext>();
+            builder.Services.AddDefaultIdentity<User>()
+                .AddRoles<Role>()
+                .AddEntityFrameworkStores<AppDbContext>();
 
             //// Add services to the container.
-            //builder.Services
-            //.AddControllers()
-            //.AddNewtonsoftJson(
-            //    options => options.SerializerSettings.ReferenceLoopHandling
-            //    = Newtonsoft.Json.ReferenceLoopHandling.Ignore
-            //);
+            builder.Services
+            .AddControllers()
+            .AddNewtonsoftJson(
+                options => options.SerializerSettings.ReferenceLoopHandling
+                = Newtonsoft.Json.ReferenceLoopHandling.Ignore
+            );
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
 
