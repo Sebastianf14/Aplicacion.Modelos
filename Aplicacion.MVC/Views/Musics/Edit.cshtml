@@ -1,0 +1,164 @@
+﻿@model Aplicacion.Modelos.Musica
+@{
+    ViewData["Title"] = "Editar Música";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h3><i class="fas fa-edit"></i> Editar Música</h3>
+                </div>
+                <div class="card-body">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle"></i> @TempData["Success"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle"></i> @TempData["Error"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <form asp-action="Edit" method="post" enctype="multipart/form-data">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <!-- Campo oculto para ID -->
+                        <input asp-for="Id" type="hidden" />
+                        <input asp-for="FilePath" type="hidden" />
+                        <input asp-for="ArtistId" type="hidden" />
+                        <input asp-for="UploadDate" type="hidden" />
+
+                        <!-- Información de la canción -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Title" class="form-label">
+                                    <i class="fas fa-music"></i> Título de la canción *
+                                </label>
+                                <input asp-for="Title" class="form-control" />
+                                <span asp-validation-for="Title" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Duration" class="form-label">
+                                    <i class="fas fa-clock"></i> Duración
+                                </label>
+                                <input asp-for="Duration" class="form-control" placeholder="3:45" />
+                                <span asp-validation-for="Duration" class="text-danger"></span>
+                                <div class="form-text">Formato: mm:ss (ej: 3:45)</div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Genre" class="form-label">
+                                    <i class="fas fa-tags"></i> Género musical *
+                                </label>
+                                <select asp-for="Genre" asp-items="ViewBag.Genres" class="form-select">
+                                    <option value="">-- Selecciona un género --</option>
+                                </select>
+                                <span asp-validation-for="Genre" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-compact-disc"></i> Album
+                                </label>
+                                <select name="AlbumId" class="form-control">
+                                    @foreach (var album in ViewBag.Albums)
+                                    {
+                                        if (Model.AlbumId?.ToString() == album.Value)
+                                        {
+                                            <option value="@album.Value" selected>@album.Text</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@album.Value">@album.Text</option>
+                                        }
+                                    }
+                                </select>
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle"></i> Puedes cambiar el album o dejarlo sin album
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="MusicFile" class="form-label">
+                                    <i class="fas fa-file-audio"></i> Cambiar archivo de música (opcional)
+                                </label>
+                                <input type="file" name="MusicFile" class="form-control"
+                                       accept=".mp3,.wav,.flac,.m4a,.ogg" />
+                                <div class="form-text">Si seleccionas un archivo, reemplazará el actual. Máximo 50MB.</div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-calendar"></i> Fecha de subida
+                                </label>
+                                <input value="@Model.UploadDate.ToString("dd/MM/yyyy HH:mm")" class="form-control" readonly />
+                                <div class="form-text">Solo lectura - no se puede modificar</div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-file-audio"></i> Archivo actual
+                                </label>
+                                <input value="@Model.FilePath" class="form-control" readonly />
+                                <div class="form-text">Se actualizará si cambias el archivo</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">
+                                <i class="fas fa-align-left"></i> Descripción
+                            </label>
+                            <textarea asp-for="Description" class="form-control" rows="3"
+                                      placeholder="Describe tu música, el estilo, inspiración, etc."></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <!-- Vista previa del cambio -->
+                        <div class="alert alert-warning">
+                            <h6><i class="fas fa-info-circle"></i> Información sobre cambio de archivo:</h6>
+                            <ul class="mb-0">
+                                <li>Si seleccionas un nuevo archivo, <strong>reemplazará completamente</strong> el actual</li>
+                                <li>El archivo anterior se <strong>eliminará permanentemente</strong></li>
+                                <li>La duración se <strong>recalculará automáticamente</strong></li>
+                                <li>Si no seleccionas archivo, el actual se <strong>mantendrá sin cambios</strong></li>
+                            </ul>
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <a asp-action="Index" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left"></i> Volver a la lista
+                                </a>
+                                <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-info">
+                                    <i class="fas fa-eye"></i> Ver detalles
+                                </a>
+                            </div>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-save"></i> Guardar cambios
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

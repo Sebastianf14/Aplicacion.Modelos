@@ -1,0 +1,72 @@
+﻿@model Aplicacion.Modelos.Playlist
+
+@{
+    ViewData["Title"] = "Crear Playlist";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h3><i class="fas fa-list"></i> Crear Nueva Playlist</h3>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label asp-for="Name" class="form-label">
+                                    <i class="fas fa-music"></i> Nombre de la Playlist *
+                                </label>
+                                <input asp-for="Name" class="form-control" placeholder="Ej: Mis Favoritas, Rock Clásico..." />
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="IsPublic" class="form-label">
+                                    <i class="fas fa-globe"></i> Visibilidad
+                                </label>
+                                <select asp-for="IsPublic" class="form-control">
+                                    <option value="true">🌐 Pública</option>
+                                    <option value="false">🔒 Privada</option>
+                                </select>
+                                <span asp-validation-for="IsPublic" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">
+                                <i class="fas fa-align-left"></i> Descripción
+                            </label>
+                            <textarea asp-for="Description" class="form-control" rows="4"
+                                      placeholder="Describe el estilo, ocasión o temática de tu playlist..."></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="alert alert-success">
+                            <i class="fas fa-lightbulb"></i>
+                            <strong>Tip:</strong> Después de crear la playlist, podrás agregar músicas desde el catálogo.
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> Crear Playlist
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

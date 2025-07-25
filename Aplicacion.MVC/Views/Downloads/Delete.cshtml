@@ -1,0 +1,37 @@
+﻿@model Aplicacion.Modelos.Implementations.Download
+@{
+    ViewData["Title"] = "Eliminar Descarga";
+}
+
+<link rel="stylesheet" href="~/css/downloads.css" />
+
+<div class="downloads-container">
+    <div class="downloads-header">
+        <h1><i class="fas fa-trash"></i> Eliminar Descarga</h1>
+        <p>¿Estás seguro que deseas eliminar esta descarga del historial?</p>
+    </div>
+
+    <div class="downloads-grid" style="max-width: 600px;">
+        <div class="download-card">
+            <div class="download-info">
+                <h3>@Model.Music?.Title</h3>
+                <p><i class="fas fa-user"></i> @Model.Music?.Artist?.FirstName @Model.Music?.Artist?.LastName</p>
+                <p><i class="fas fa-calendar"></i> Descargado: @Model.DownloadDate.ToString("dd/MM/yyyy HH:mm")</p>
+                <p style="color: #ffeb3b; margin-top: 15px;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Nota:</strong> Esto solo eliminará el registro. El archivo descargado permanecerá en tu dispositivo.
+                </p>
+            </div>
+
+            <form asp-action="Delete" method="post" class="download-actions">
+                <input asp-for="Id" type="hidden" />
+                <button type="submit" class="btn-download btn-danger-download">
+                    <i class="fas fa-trash"></i> Sí, Eliminar
+                </button>
+                <a href="@Url.Action("Index")" class="btn-download">
+                    <i class="fas fa-times"></i> Cancelar
+                </a>
+            </form>
+        </div>
+    </div>
+</div>

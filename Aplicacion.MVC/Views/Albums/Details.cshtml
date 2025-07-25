@@ -1,0 +1,283 @@
+﻿@model Aplicacion.Modelos.Album
+@{
+    ViewData["Title"] = "Detalles del Album";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- Información del Album -->
+        <div class="col-md-4">
+            <div class="album-cover-large">
+                @if (!string.IsNullOrEmpty(Model.CoverImagePath))
+                {
+                    <img src="@Model.CoverImagePath" alt="@Model.Name" class="img-fluid rounded" />
+                }
+                else
+                {
+                    <div class="default-cover">
+                        <i class="fas fa-compact-disc"></i>
+                    </div>
+                }
+            </div>
+            
+            <div class="album-info mt-3">
+                <h3>@Model.Name</h3>
+                <p class="text-muted">
+                    <i class="fas fa-user"></i> @Model.Artist?.FirstName @Model.Artist?.LastName
+                </p>
+                <p class="text-muted">
+                    <i class="fas fa-calendar"></i> @Model.ReleaseDate.ToString("dd 'de' MMMM 'de' yyyy")
+                </p>
+                @if (!string.IsNullOrEmpty(Model.Description))
+                {
+                    <p class="album-description">@Model.Description</p>
+                }
+                
+                <!-- Botones de acción -->
+                <div class="mt-3">
+                    @if (User.IsInRole("artists"))
+                    {
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
+                            <i class="fas fa-edit"></i> Editar
+                        </a>
+                    }
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Volver
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Lista de Músicas -->
+        <div class="col-md-8">
+            <div class="album-tracks">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4><i class="fas fa-music"></i> Canciones del Album</h4>
+                    @if (Model.Musics?.Any() == true)
+                    {
+                        <span class="badge bg-primary">@Model.Musics.Count canción(es)</span>
+                    }
+                </div>
+                
+                @if (Model.Musics?.Any() == true)
+                {
+                    <div class="tracks-list">
+                        @foreach (var music in Model.Musics.OrderBy(m => m.Title))
+                        {
+                            <div class="track-item">
+                                <div class="track-info">
+                                    <div class="track-number">
+                                        @(Model.Musics.ToList().IndexOf(music) + 1)
+                                    </div>
+                                    <div class="track-details">
+                                        <h6 class="track-title">@music.Title</h6>
+                                        <p class="track-meta">
+                                            @music.Genre.ToString()
+                                            @if (!string.IsNullOrEmpty(music.Duration))
+                                            {
+                                                <span> • @music.Duration</span>
+                                            }
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="track-actions">
+                                    <button class="btn btn-success btn-sm" 
+                                            onclick="playMusic(@music.Id, '@music.Title', '@music.Artist?.FirstName @music.Artist?.LastName', '/files/@music.FilePath')">
+                                        <i class="fas fa-play"></i>
+                                    </button>
+                                    
+                                    @if (User.Identity.IsAuthenticated)
+                                    {
+                                        <button class="btn btn-outline-primary btn-sm ms-1" 
+                                                onclick="showAddToPlaylistModal(@music.Id, '@music.Title')">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    
+                    <!-- Botón para reproducir todo -->
+                    <div class="mt-3 text-center">
+                        <button class="btn btn-success btn-lg" onclick="playAlbum()">
+                            <i class="fas fa-play"></i> Reproducir Album Completo
+                        </button>
+                    </div>
+                }
+                else
+                {
+                    <div class="no-tracks text-center py-5">
+                        <i class="fas fa-music fa-3x text-muted mb-3"></i>
+                        <h5>No hay canciones en este album</h5>
+                        <p class="text-muted">Las canciones aparecerán aquí cuando se suban con este album asignado.</p>
+                        
+                        @if (User.IsInRole("artists"))
+                        {
+                            <a asp-controller="Musics" asp-action="Create" class="btn btn-primary mt-2">
+                                <i class="fas fa-plus"></i> Subir Primera Canción
+                            </a>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para agregar a playlist (igual que en SearchResults) -->
+@if (User.Identity.IsAuthenticated)
+{
+    <div class="modal fade" id="addToPlaylistModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-list"></i> Agregar a Playlist
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Agregar "<span id="songTitle"></span>" a:</p>
+                    <div id="playlistsList">
+                        <div class="text-center">
+                            <i class="fas fa-spinner fa-spin"></i> Cargando playlists...
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <a asp-controller="Playlists" asp-action="Create" class="btn btn-success">
+                        <i class="fas fa-plus"></i> Crear Nueva Playlist
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .album-cover-large {
+        text-align: center;
+    }
+    
+    .default-cover {
+        width: 100%;
+        height: 300px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        color: white;
+        font-size: 80px;
+    }
+    
+    .album-info h3 {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    
+    .album-description {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        border-left: 4px solid #007bff;
+        margin-top: 15px;
+    }
+    
+    .tracks-list {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .track-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 20px;
+        border-bottom: 1px solid #f0f0f0;
+        transition: background-color 0.2s ease;
+    }
+    
+    .track-item:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .track-item:last-child {
+        border-bottom: none;
+    }
+    
+    .track-info {
+        display: flex;
+        align-items: center;
+        flex: 1;
+    }
+    
+    .track-number {
+        width: 30px;
+        height: 30px;
+        background: #007bff;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 15px;
+        font-size: 14px;
+    }
+    
+    .track-details {
+        flex: 1;
+    }
+    
+    .track-title {
+        margin: 0 0 4px 0;
+        font-size: 16px;
+        font-weight: 600;
+    }
+    
+    .track-meta {
+        margin: 0;
+        color: #666;
+        font-size: 14px;
+    }
+    
+    .track-actions {
+        display: flex;
+        align-items: center;
+    }
+    
+    .no-tracks {
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin: 20px 0;
+    }
+</style>
+
+<script>
+    let currentMusicId = 0;
+
+    function showAddToPlaylistModal(musicId, songTitle) {
+        currentMusicId = musicId;
+        document.getElementById('songTitle').textContent = songTitle;
+        
+        // Mostrar modal
+        new bootstrap.Modal(document.getElementById('addToPlaylistModal')).show();
+        
+        // Simular carga
+        setTimeout(() => {
+            document.getElementById('playlistsList').innerHTML = 
+                '<p class="text-muted">Funcionalidad en desarrollo.</p>';
+        }, 1000);
+    }
+
+    function playAlbum() {
+        // Funcionalidad para reproducir todo el album
+        alert('Reproducir album completo - por implementar');
+    }
+</script>

@@ -1,0 +1,158 @@
+﻿@model IEnumerable<Aplicacion.Modelos.Suscription.SubscriptionPlan>
+@{
+    ViewData["Title"] = "Planes de Suscripción";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var currentSubscription = ViewBag.CurrentSubscription as Aplicacion.Modelos.Suscription.UserSubscription;
+}
+
+<link rel="stylesheet" href="~/css/subscriptions.css" />
+
+<div class="subscriptions-container">
+    <div class="subscriptions-header">
+        <h1><i class="fas fa-crown"></i> Elige tu Plan Perfecto</h1>
+        <p>Desbloquea todo el potencial de SonikoMusic con nuestros planes premium. Sin compromisos, cancela cuando quieras.</p>
+    </div>
+
+    @if (currentSubscription != null)
+    {
+        <div class="subscription-status status-@(currentSubscription.Status.ToString().ToLower())">
+            <h4><i class="fas fa-info-circle"></i> Tu Suscripción Actual</h4>
+            <div class="subscription-details">
+                <div class="detail-item">
+                    <div class="detail-label">Plan</div>
+                    <div class="detail-value">@currentSubscription.SubscriptionPlan?.Name</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Estado</div>
+                    <div class="detail-value">@currentSubscription.Status</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Vence</div>
+                    <div class="detail-value">@currentSubscription.EndDate.ToString("dd/MM/yyyy")</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Precio</div>
+                    <div class="detail-value">$@(currentSubscription.SubscriptionPlan?.Price ?? 0)/mes</div>
+                </div>
+            </div>
+            <div class="subscription-actions">
+                <a href="@Url.Action("Index")" class="btn-subscription btn-change">
+                    <i class="fas fa-cog"></i> Gestionar Suscripción
+                </a>
+            </div>
+        </div>
+    }
+
+    <div class="plans-grid">
+        @foreach (var plan in Model)
+        {
+            var isCurrent = currentSubscription?.SubscriptionPlanId == plan.Id;
+            var isRecommended = plan.Name == "Familiar";
+            
+            <div class="plan-card @(isRecommended ? "featured" : "") @(isCurrent ? "current-plan" : "")">
+                <div class="plan-header">
+                    <h3>@plan.Name</h3>
+                    <p class="plan-subtitle">@plan.Description</p>
+                </div>
+
+                <div class="plan-price">
+                    <span class="currency">$</span>
+                    @plan.Price.ToString("F2")
+                    @if (plan.Price > 0)
+                    {
+                        <span class="period">/mes</span>
+                    }
+                </div>
+
+                <ul class="plan-features">
+                    <li>
+                        <span class="feature-text">Reproducción ilimitada</span>
+                        <i class="fas fa-check feature-check"></i>
+                    </li>
+                    <li>
+                        <span class="feature-text">Descargas para offline</span>
+                        @if (plan.AllowDownloads)
+                        {
+                            <i class="fas fa-check feature-check"></i>
+                        }
+                        else
+                        {
+                            <i class="fas fa-times feature-cross"></i>
+                        }
+                    </li>
+                    <li>
+                        <span class="feature-text">Playlists</span>
+                        <span class="feature-check">
+                            @(plan.MaxPlaylists == -1 ? "Ilimitadas" : plan.MaxPlaylists.ToString())
+                        </span>
+                    </li>
+                    <li>
+                        <span class="feature-text">Sin anuncios</span>
+                        @if (!plan.HasAds)
+                        {
+                            <i class="fas fa-check feature-check"></i>
+                        }
+                        else
+                        {
+                            <i class="fas fa-times feature-cross"></i>
+                        }
+                    </li>
+                    <li>
+                        <span class="feature-text">Modo offline</span>
+                        @if (plan.AllowOfflineMode)
+                        {
+                            <i class="fas fa-check feature-check"></i>
+                        }
+                        else
+                        {
+                            <i class="fas fa-times feature-cross"></i>
+                        }
+                    </li>
+                </ul>
+
+                <div class="plan-action">
+                    @if (isCurrent)
+                    {
+                        <button class="btn-subscribe current" disabled>
+                            <i class="fas fa-check"></i> Tu Plan Actual
+                        </button>
+                    }
+                    else if (plan.Price == 0)
+                    {
+                        @if (currentSubscription?.SubscriptionPlan?.Price > 0)
+                        {
+                            <button class="btn-subscribe disabled" disabled>
+                                <i class="fas fa-lock"></i> No Disponible
+                            </button>
+                            <small style="opacity: 0.7; margin-top: 10px; display: block;">
+                                No puedes cambiar a plan gratuito
+                            </small>
+                        }
+                        else
+                        {
+                            <button class="btn-subscribe current" disabled>
+                                <i class="fas fa-check"></i> Plan Actual
+                            </button>
+                        }
+                    }
+                    else
+                    {
+                        <form asp-action="ChangePlan" method="post" style="width: 100%;">
+                            <input type="hidden" name="newPlanId" value="@plan.Id" />
+                            <button type="submit" class="btn-subscribe">
+                                @if (currentSubscription?.SubscriptionPlan?.Price == 0)
+                                {
+                                    <i class="fas fa-crown"></i> <text>Mejorar Plan</text>
+                                }
+                                else
+                                {
+                                    <i class="fas fa-exchange-alt"></i> <text>Cambiar Plan</text>
+                                }
+                            </button>
+                        </form>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>

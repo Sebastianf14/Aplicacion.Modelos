@@ -1,0 +1,445 @@
+﻿@model IEnumerable<Aplicacion.Modelos.Suscription.UserSubscription>
+@{
+    ViewData["Title"] = "Mi Suscripción";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var isAdmin = ViewBag.IsAdmin as bool? ?? false;
+    var currentSubscription = ViewBag.CurrentSubscription as Aplicacion.Modelos.Suscription.UserSubscription;
+}
+
+<link rel="stylesheet" href="~/css/subscriptions.css" />
+
+<div class="subscriptions-container">
+    <div class="subscriptions-header">
+        <h1>
+            <i class="fas fa-user-cog"></i> 
+            @if (isAdmin)
+            {
+                <text>Gestión de Suscripciones</text>
+            }
+            else
+            {
+                <text>Mi Suscripción</text>
+            }
+        </h1>
+        <p>
+            @if (isAdmin)
+            {
+                <text>Administra todas las suscripciones del sistema</text>
+            }
+            else
+            {
+                <text>Gestiona tu plan y configuración de suscripción</text>
+            }
+        </p>
+    </div>
+
+    @if (!isAdmin)
+    {
+        <!-- Vista de Usuario Normal -->
+        @if (currentSubscription != null)
+        {
+            <!-- Suscripción Actual del Usuario -->
+            <div class="subscription-status status-@(currentSubscription.Status.ToString().ToLower())">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3>
+                        <i class="fas fa-crown"></i> 
+                        Tu Plan: @currentSubscription.SubscriptionPlan?.Name
+                    </h3>
+                    <span class="detail-value" style="font-size: 1.5rem;">
+                        $@(currentSubscription.SubscriptionPlan?.Price ?? 0)/mes
+                    </span>
+                </div>
+
+                <div class="subscription-details">
+                    <div class="detail-item">
+                        <div class="detail-label">Estado</div>
+                        <div class="detail-value">
+                            @switch (currentSubscription.Status.ToString())
+                            {
+                                case "Active":
+                                    <span style="color: #4caf50;">✅ Activo</span>
+                                    break;
+                                case "Expired":
+                                    <span style="color: #ff6b6b;">❌ Expirado</span>
+                                    break;
+                                case "Cancelled":
+                                    <span style="color: #ff9800;">⚠️ Cancelado</span>
+                                    break;
+                                default:
+                                    <span>@currentSubscription.Status</span>
+                                    break;
+                            }
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Inicio</div>
+                        <div class="detail-value">@currentSubscription.StartDate.ToString("dd/MM/yyyy")</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Vencimiento</div>
+                        <div class="detail-value">
+                            @{
+                                var daysLeft = (currentSubscription.EndDate - DateTime.Now).Days;
+                            }
+
+                            @if (currentSubscription.EndDate.Year >= 2100)
+                            {
+                                <span>Permanente</span>
+                            }
+                            else
+                            {
+                                <span>@currentSubscription.EndDate.ToString("dd/MM/yyyy")</span>
+
+                                @if (daysLeft > 0 && daysLeft <= 7)
+                                {
+                                    <small style="color: #ff9800; display: block;">
+                                        ⚠️ Vence en @daysLeft días
+                                    </small>
+                                }
+                                else if (daysLeft <= 0)
+                                {
+                                    <small style="color: #ff6b6b; display: block;">
+                                        ❌ Expirado
+                                    </small>
+                                }
+                            }
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Método de Pago</div>
+                        <div class="detail-value">@currentSubscription.PaymentMethod</div>
+                    </div>
+                </div>
+
+                <!-- Beneficios del Plan Actual -->
+                <div style="background: rgba(255, 255, 255, 0.1); border-radius: 15px; padding: 20px; margin: 25px 0;">
+                    <h4 style="margin-bottom: 15px; color: #4ecdc4;">
+                        <i class="fas fa-star"></i> Beneficios de tu plan
+                    </h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            @if (currentSubscription.SubscriptionPlan?.AllowDownloads == true)
+                            {
+                                <i class="fas fa-download" style="color: #4caf50;"></i>
+                                <span>Descargas ilimitadas</span>
+                            }
+                            else
+                            {
+                                <i class="fas fa-times" style="color: #ff6b6b;"></i>
+                                <span>Sin descargas</span>
+                            }
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            @if (currentSubscription.SubscriptionPlan?.AllowOfflineMode == true)
+                            {
+                                <i class="fas fa-wifi" style="color: #4caf50;"></i>
+                                <span>Modo offline</span>
+                            }
+                            else
+                            {
+                                <i class="fas fa-times" style="color: #ff6b6b;"></i>
+                                <span>Solo online</span>
+                            }
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-list" style="color: #4caf50;"></i>
+                            <span>
+                                @if (currentSubscription.SubscriptionPlan?.MaxPlaylists == -1)
+                                {
+                                    <text>Playlists ilimitadas</text>
+                                }
+                                else
+                                {
+                                    <text>@currentSubscription.SubscriptionPlan?.MaxPlaylists playlists máx</text>
+                                }
+                            </span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            @if (currentSubscription.SubscriptionPlan?.HasAds == false)
+                            {
+                                <i class="fas fa-ad" style="color: #4caf50;"></i>
+                                <span>Sin publicidad</span>
+                            }
+                            else
+                            {
+                                <i class="fas fa-exclamation-triangle" style="color: #ff9800;"></i>
+                                <span>Con anuncios</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Acciones -->
+                <div class="subscription-actions">
+                    @if (currentSubscription.SubscriptionPlan?.Price == 0)
+                    {
+                        <a href="@Url.Action("Plans")" class="btn-subscription btn-change">
+                            <i class="fas fa-crown"></i> Mejorar Plan
+                        </a>
+                    }
+                    else
+                    {
+                        <a href="@Url.Action("Plans")" class="btn-subscription btn-change">
+                            <i class="fas fa-exchange-alt"></i> Cambiar Plan
+                        </a>
+
+                        @if (currentSubscription.Status.ToString() == "Active")
+                        {
+                            <form asp-action="Cancel" method="post" style="display: inline;">
+                                <input type="hidden" name="subscriptionId" value="@currentSubscription.Id" />
+                                <button type="submit" class="btn-subscription btn-cancel" 
+                                        onclick="return confirm('¿Estás seguro de cancelar tu suscripción?')">
+                                    <i class="fas fa-times"></i> Cancelar Suscripción
+                                </button>
+                            </form>
+                        }
+                    }
+                </div>
+            </div>
+
+            <!-- Historial de Suscripciones -->
+            @if (Model.Count() > 1)
+            {
+                <div style="background: rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 25px; margin-top: 30px;">
+                    <h4><i class="fas fa-history"></i> Historial de Suscripciones</h4>
+                    <div style="overflow-x: auto; margin-top: 15px;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid rgba(255, 255, 255, 0.2);">
+                                    <th style="padding: 10px; text-align: left;">Plan</th>
+                                    <th style="padding: 10px; text-align: left;">Período</th>
+                                    <th style="padding: 10px; text-align: left;">Estado</th>
+                                    <th style="padding: 10px; text-align: left;">Pago</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var subscription in Model.OrderByDescending(s => s.StartDate))
+                                {
+                                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                                        <td style="padding: 10px;">@subscription.SubscriptionPlan?.Name</td>
+                                        <td style="padding: 10px;">
+                                            @subscription.StartDate.ToString("dd/MM/yyyy") - 
+                                            @(subscription.EndDate.Year >= 2100 ? "Permanente" : subscription.EndDate.ToString("dd/MM/yyyy"))
+                                        </td>
+                                        <td style="padding: 10px;">
+                                            <span style="color: @(subscription.Status.ToString() == "Active" ? "#4caf50" : "#ff9800");">
+                                                @subscription.Status
+                                            </span>
+                                        </td>
+                                        <td style="padding: 10px;">@subscription.PaymentMethod</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <!-- Usuario sin suscripción -->
+            <div class="subscription-status" style="text-align: center; padding: 60px;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 4rem; color: #ff9800; margin-bottom: 20px;"></i>
+                <h3>No tienes una suscripción activa</h3>
+                <p>Explora nuestros planes y encuentra el perfecto para ti</p>
+                <a href="@Url.Action("Plans")" class="btn-subscribe">
+                    <i class="fas fa-crown"></i> Ver Planes Disponibles
+                </a>
+            </div>
+        }
+    }
+    else
+    {
+        <!-- Vista de Administrador -->
+        <div class="subscription-status">
+            <h4><i class="fas fa-chart-bar"></i> Estadísticas del Sistema</h4>
+            <div class="subscription-details">
+                <div class="detail-item">
+                    <div class="detail-label">Total Suscripciones</div>
+                    <div class="detail-value">@Model.Count()</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Activas</div>
+                    <div class="detail-value">@Model.Count(s => s.IsActive)</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Gratuitas</div>
+                    <div class="detail-value">@Model.Count(s => s.SubscriptionPlan?.Price == 0)</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Premium</div>
+                    <div class="detail-value">@Model.Count(s => s.SubscriptionPlan?.Price > 0)</div>
+                </div>
+            </div>
+        </div>
+
+        var notificationStats = ViewBag.NotificationStats;
+        var allNotifications = ViewBag.AllNotifications as List<Aplicacion.Modelos.Implementations.Notificacion> ?? new List<Aplicacion.Modelos.Implementations.Notificacion>();
+
+        <div style="background: rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 25px; margin-top: 30px;">
+            <h4><i class="fas fa-bell"></i> Panel de Notificaciones del Sistema</h4>
+
+            <!-- Estadísticas de notificaciones -->
+            <div class="subscription-details" style="margin-bottom: 20px;">
+                <div class="detail-item">
+                    <div class="detail-label">Total Notificaciones</div>
+                    <div class="detail-value">@notificationStats.Total</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">No Leídas</div>
+                    <div class="detail-value">@notificationStats.Unread</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Hoy</div>
+                    <div class="detail-value">@notificationStats.Today</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Esta Semana</div>
+                    <div class="detail-value">@notificationStats.ThisWeek</div>
+                </div>
+            </div>
+
+            <!-- Breakdown por tipo -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                <div style="background: rgba(78, 205, 196, 0.2); padding: 15px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 1.5rem; color: #4ecdc4; font-weight: bold;">@notificationStats.NewMusic</div>
+                    <div style="font-size: 0.9rem; opacity: 0.8;">Nueva Música</div>
+                </div>
+                <div style="background: rgba(102, 126, 234, 0.2); padding: 15px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 1.5rem; color: #667eea; font-weight: bold;">@notificationStats.Welcome</div>
+                    <div style="font-size: 0.9rem; opacity: 0.8;">Bienvenidas</div>
+                </div>
+                <div style="background: rgba(255, 107, 107, 0.2); padding: 15px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 1.5rem; color: #ff6b6b; font-weight: bold;">@notificationStats.System</div>
+                    <div style="font-size: 0.9rem; opacity: 0.8;">Sistema</div>
+                </div>
+                <div style="background: rgba(255, 193, 7, 0.2); padding: 15px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 1.5rem; color: #ffc107; font-weight: bold;">@notificationStats.SubscriptionExpiry</div>
+                    <div style="font-size: 0.9rem; opacity: 0.8;">Vencimientos</div>
+                </div>
+            </div>
+
+            <!-- Últimas notificaciones del sistema -->
+            <h5 style="margin-top: 30px; margin-bottom: 15px;">
+                <i class="fas fa-history"></i> Actividad Reciente (Últimas 10)
+            </h5>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid rgba(255, 255, 255, 0.2);">
+                            <th style="padding: 10px; text-align: left;">Usuario</th>
+                            <th style="padding: 10px; text-align: left;">Tipo</th>
+                            <th style="padding: 10px; text-align: left;">Título</th>
+                            <th style="padding: 10px; text-align: left;">Fecha</th>
+                            <th style="padding: 10px; text-align: left;">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var notification in allNotifications.Take(10))
+                        {
+                            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                                <td style="padding: 8px;">
+                                    @notification.User?.FirstName @notification.User?.LastName
+                                    <br><small style="opacity: 0.7;">ID: @notification.UserId</small>
+                                </td>
+                                <td style="padding: 8px;">
+                                    <span style="background: rgba(78, 205, 196, 0.3); padding: 4px 8px; border-radius: 10px; font-size: 0.8rem;">
+                                        @switch (notification.Type)
+                                        {
+                                            case Aplicacion.Modelos.Implementations.Notificacion.NotificationType.NewMusic:
+                                                <text>🎵 Música</text>
+                                                break;
+                                            case Aplicacion.Modelos.Implementations.Notificacion.NotificationType.Welcome:
+                                                <text>👋 Bienvenida</text>
+                                                break;
+                                            case Aplicacion.Modelos.Implementations.Notificacion.NotificationType.System:
+                                                <text>⚙️ Sistema</text>
+                                                break;
+                                            case Aplicacion.Modelos.Implementations.Notificacion.NotificationType.SubscriptionExpiry:
+                                                <text>⚠️ Vencimiento</text>
+                                                break;
+                                            default:
+                                                <text>📋 @notification.Type</text>
+                                                break;
+                                        }
+                                    </span>
+                                </td>
+                                <td style="padding: 8px;">
+                                    @notification.Title
+                                    <br><small style="opacity: 0.7;">@notification.Message.Substring(0, Math.Min(50, notification.Message.Length))...</small>
+                                </td>
+                                <td style="padding: 8px;">
+                                    @notification.CreatedDate.ToString("dd/MM HH:mm")
+                                </td>
+                                <td style="padding: 8px;">
+                                    @if (notification.IsRead)
+                                    {
+                                        <span style="color: #4caf50;">✅ Leída</span>
+                                    }
+                                    else
+                                    {
+                                        <span style="color: #ff9800;">🔸 No leída</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+        <!-- Lista de todas las suscripciones para admins -->
+        <div style="background: rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 25px; margin-top: 30px;">
+            <h4><i class="fas fa-users"></i> Todas las Suscripciones</h4>
+            <div style="overflow-x: auto; margin-top: 15px;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid rgba(255, 255, 255, 0.2);">
+                            <th style="padding: 10px; text-align: left;">Usuario</th>
+                            <th style="padding: 10px; text-align: left;">Plan</th>
+                            <th style="padding: 10px; text-align: left;">Estado</th>
+                            <th style="padding: 10px; text-align: left;">Vencimiento</th>
+                            <th style="padding: 10px; text-align: left;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var subscription in Model.OrderByDescending(s => s.StartDate))
+                        {
+                            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                                <td style="padding: 10px;">
+                                    @subscription.User?.FirstName @subscription.User?.LastName
+                                    <br><small style="opacity: 0.7;">@subscription.User?.Email</small>
+                                </td>
+                                <td style="padding: 10px;">
+                                    @subscription.SubscriptionPlan?.Name
+                                    <br><small style="opacity: 0.7;">$@(subscription.SubscriptionPlan?.Price ?? 0)/mes</small>
+                                </td>
+                                <td style="padding: 10px;">
+                                    <span style="color: @(subscription.IsActive ? "#4caf50" : "#ff6b6b");">
+                                        @(subscription.IsActive ? "Activa" : "Inactiva")
+                                    </span>
+                                </td>
+                                <td style="padding: 10px;">
+                                    @(subscription.EndDate.Year >= 2100 ? "Permanente" : subscription.EndDate.ToString("dd/MM/yyyy"))
+                                </td>
+                                <td style="padding: 10px;">
+                                    @if (subscription.IsActive && subscription.SubscriptionPlan?.Price > 0)
+                                    {
+                                        <form asp-action="Cancel" method="post" style="display: inline;">
+                                            <input type="hidden" name="subscriptionId" value="@subscription.Id" />
+                                            <button type="submit" class="btn-subscription btn-cancel" style="padding: 5px 10px; font-size: 0.8rem;"
+                                                    onclick="return confirm('¿Cancelar suscripción de @subscription.User?.FirstName?')">
+                                                <i class="fas fa-times"></i> Cancelar
+                                            </button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

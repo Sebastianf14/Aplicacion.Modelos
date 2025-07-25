@@ -1,0 +1,159 @@
+﻿@model Aplicacion.MVC.Models.ModifyAccount.ProfileViewModel
+@{
+    ViewData["Title"] = "Mi Perfil";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h3><i class="fas fa-user-edit"></i> Mi Perfil</h3>
+                </div>
+                <div class="card-body">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle"></i> @TempData["Success"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle"></i> @TempData["Error"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <form asp-action="Profile" method="post">
+                        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                        <!-- Información de la cuenta -->
+                        <h5 class="mb-3 text-info">
+                            <i class="fas fa-info-circle"></i> Información de la cuenta
+                        </h5>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="FirstName" class="form-label">
+                                    <i class="fas fa-user"></i> Nombre *
+                                </label>
+                                <input asp-for="FirstName" class="form-control" placeholder="Tu nombre" />
+                                <span asp-validation-for="FirstName" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="LastName" class="form-label">
+                                    <i class="fas fa-user"></i> Apellido *
+                                </label>
+                                <input asp-for="LastName" class="form-control" placeholder="Tu apellido" />
+                                <span asp-validation-for="LastName" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Email (solo lectura) -->
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <i class="fas fa-envelope"></i> Email de la cuenta
+                            </label>
+                            <input value="@Model.CurrentEmail" class="form-control" readonly="readonly"/>
+                            <div class="form-text">
+                                <i class="fas fa-lock"></i> El email no se puede modificar por seguridad.
+                            </div>
+                        </div>
+
+                        <!-- Información adicional -->
+                        <div class="alert alert-light border">
+                            <h6><i class="fas fa-shield-alt"></i> Información de seguridad:</h6>
+                            <ul class="mb-0">
+                                <li>Tu email de acceso no se puede cambiar por motivos de seguridad</li>
+                                <li>Los cambios en tu nombre se reflejarán en toda la aplicación</li>
+                                <li>Puedes modificar estos datos cuando quieras</li>
+                            </ul>
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="d-flex justify-content-between">
+                            <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Volver al inicio
+                            </a>
+                            <div>
+                                <button type="button" class="btn btn-outline-warning me-2" onclick="resetForm()">
+                                    <i class="fas fa-undo"></i> Deshacer cambios
+                                </button>
+                                <button type="submit" class="btn btn-info">
+                                    <i class="fas fa-save"></i> Guardar cambios
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Sección adicional -->
+                    <hr class="my-4">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-key"></i> ¿Quieres cambiar tu contraseña?</h6>
+                            <p class="text-muted small">Por seguridad, el cambio de contraseña se maneja por separado.</p>
+                            <a asp-controller="Account" asp-action="ChangePassword" class="btn btn-outline-warning btn-sm">
+                            
+                                <i class="fas fa-key"></i> Cambiar contraseña
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        // Función para deshacer cambios
+        function resetForm() {
+            if (confirm('¿Estás seguro de que quieres deshacer todos los cambios?')) {
+                location.reload();
+            }
+        }
+
+        // Mostrar si hay cambios sin guardar
+        let originalData = {
+            firstName: document.getElementById('FirstName').value,
+            lastName: document.getElementById('LastName').value
+        };
+
+        function checkForChanges() {
+            const currentFirstName = document.getElementById('FirstName').value;
+            const currentLastName = document.getElementById('LastName').value;
+
+            const hasChanges = (currentFirstName !== originalData.firstName) ||
+                              (currentLastName !== originalData.lastName);
+
+            const resetBtn = document.querySelector('.btn-outline-warning');
+            const saveBtn = document.querySelector('.btn-info');
+
+            if (hasChanges) {
+                resetBtn.style.display = 'inline-block';
+                saveBtn.classList.remove('btn-info');
+                saveBtn.classList.add('btn-success');
+                saveBtn.innerHTML = '<i class="fas fa-save"></i> Guardar cambios';
+            } else {
+                resetBtn.style.display = 'none';
+                saveBtn.classList.remove('btn-success');
+                saveBtn.classList.add('btn-info');
+                saveBtn.innerHTML = '<i class="fas fa-save"></i> Guardar cambios';
+            }
+        }
+
+        // Detectar cambios en tiempo real
+        document.getElementById('FirstName').addEventListener('input', checkForChanges);
+        document.getElementById('LastName').addEventListener('input', checkForChanges);
+
+        // Inicializar
+        checkForChanges();
+    </script>
+}

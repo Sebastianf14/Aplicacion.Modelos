@@ -1,0 +1,60 @@
+﻿@model Aplicacion.Modelos.Musica
+@{
+    ViewData["Title"] = "Quitar Música de Favoritos";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/favorites.css" />
+
+<div class="favorites-container">
+    <div class="favorites-header">
+        <h1><i class="fas fa-heart-broken"></i> Quitar de Favoritos</h1>
+        <p>¿Estás seguro que deseas quitar esta música de tus favoritos?</p>
+    </div>
+
+    <div class="favorites-grid" style="max-width: 500px; margin: 0 auto;">
+        <div class="favorite-card">
+            <div class="favorite-info">
+                <h3>@Model.Title</h3>
+                <p><i class="fas fa-user"></i> @Model.Artist?.FirstName @Model.Artist?.LastName</p>
+                <p><i class="fas fa-clock"></i> @(Model.Duration ?? "N/A")</p>
+                <p><span class="genre-badge">@Model.Genre</span></p>
+                @if (Model.Album != null)
+                {
+                    <p><i class="fas fa-album-collection"></i> Álbum: @Model.Album.Name</p>
+                }
+
+                <div style="background: rgba(255, 235, 59, 0.2); padding: 15px; border-radius: 10px; margin-top: 15px; border-left: 4px solid #ffeb3b;">
+                    <p style="margin: 0; color: #ffeb3b;">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Esta acción eliminará la música de tu lista de favoritos.</strong>
+                    </p>
+                </div>
+            </div>
+
+            <form asp-action="ConfirmRemoveMusic" method="post" class="favorite-actions">
+                <input type="hidden" name="musicId" value="@Model.Id" />
+                <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+
+                <button type="submit" class="btn-favorite">
+                    <i class="fas fa-heart-broken"></i> Sí, Quitar de Favoritos
+                </button>
+
+                <a href="@Url.Action("Index")" class="btn-favorite btn-play">
+                    <i class="fas fa-times"></i> Cancelar
+                </a>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function playMusic(filePath, title, artist) {
+        if (typeof window.setCurrentTrack === 'function') {
+            window.setCurrentTrack('/files/' + filePath, title, artist);
+            window.playAudio();
+        } else {
+            alert('Reproduciendo: ' + title + ' - ' + artist);
+        }
+    }
+</script>

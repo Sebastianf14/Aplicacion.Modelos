@@ -1,0 +1,132 @@
+﻿@model Aplicacion.Modelos.Suscription.SubscriptionPlan
+@{
+    ViewData["Title"] = "Detalles del Plan";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/admin-plans.css" />
+
+<div class="admin-plans-container">
+    <div class="admin-header">
+        <h1><i class="fas fa-info-circle"></i> Detalles del Plan</h1>
+        <div>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-admin-primary">
+                <i class="fas fa-edit"></i> Editar Plan
+            </a>
+            <a asp-action="Index" class="btn-admin-primary" style="background: #6c757d;">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="plan-details-container">
+        <div class="plan-details-header">
+            <h2>@Model.Name</h2>
+            <p style="color: #6c757d; font-size: 1.1rem;">@Model.Description</p>
+            <div class="plan-details-price">
+                @if (Model.Price == 0)
+                {
+                    <text>Gratuito</text>
+                }
+                else
+                {
+                    <text>$@Model.Price.ToString("F2") <small style="font-size: 1rem;">/mes</small></text>
+                }
+            </div>
+            <span class="status-badge @(Model.IsActive ? "status-active" : "status-inactive")">
+                @(Model.IsActive ? "Plan Activo" : "Plan Inactivo")
+            </span>
+        </div>
+
+        <div class="plan-features-grid">
+            <div class="feature-card">
+                <div class="feature-title">Duración</div>
+                <div class="feature-value">@Model.DurationInMonths mes(es)</div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-title">Descargas</div>
+                <div class="feature-value">
+                    @if (Model.AllowDownloads)
+                    {
+                        <span style="color: #28a745;">✅ Permitidas</span>
+                    }
+                    else
+                    {
+                        <span style="color: #dc3545;">❌ No permitidas</span>
+                    }
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-title">Modo Offline</div>
+                <div class="feature-value">
+                    @if (Model.AllowOfflineMode)
+                    {
+                        <span style="color: #28a745;">✅ Disponible</span>
+                    }
+                    else
+                    {
+                        <span style="color: #dc3545;">❌ No disponible</span>
+                    }
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-title">Playlists</div>
+                <div class="feature-value">
+                    @if (Model.MaxPlaylists == -1)
+                    {
+                        <span style="color: #28a745;">♾️ Ilimitadas</span>
+                    }
+                    else
+                    {
+                        <text>📋 Máximo @Model.MaxPlaylists</text>
+                    }
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-title">Publicidad</div>
+                <div class="feature-value">
+                    @if (Model.HasAds)
+                    {
+                        <span style="color: #ffc107;">⚠️ Con anuncios</span>
+                    }
+                    else
+                    {
+                        <span style="color: #28a745;">✅ Sin anuncios</span>
+                    }
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-title">Estado del Plan</div>
+                <div class="feature-value">
+                    @if (Model.IsActive)
+                    {
+                        <span style="color: #28a745;">🟢 Activo y disponible</span>
+                    }
+                    else
+                    {
+                        <span style="color: #dc3545;">🔴 Inactivo (no disponible)</span>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-actions" style="justify-content: center; margin-top: 30px;">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-admin-action btn-admin-edit">
+                <i class="fas fa-edit"></i> Editar Plan
+            </a>
+            <a asp-action="Toggle" asp-route-id="@Model.Id" class="btn-admin-action btn-admin-toggle">
+                <i class="fas fa-power-off"></i>
+                @(Model.IsActive ? "Desactivar" : "Activar") Plan
+            </a>
+            <a asp-action="Index" class="btn-admin-action" style="background: #6c757d; color: white;">
+                <i class="fas fa-list"></i> Ver Todos los Planes
+            </a>
+        </div>
+    </div>
+</div>
+

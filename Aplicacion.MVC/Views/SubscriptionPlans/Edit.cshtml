@@ -1,0 +1,95 @@
+﻿@model Aplicacion.Modelos.Suscription.SubscriptionPlan
+@{
+    ViewData["Title"] = "Editar Plan";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/admin-plans.css" />
+
+<div class="admin-plans-container">
+    <div class="admin-header">
+        <h1><i class="fas fa-edit"></i> Editar Plan: @Model.Name</h1>
+        <a asp-action="Index" class="btn-admin-primary" style="background: #6c757d;">
+            <i class="fas fa-arrow-left"></i> Cancelar
+        </a>
+    </div>
+
+    <div class="admin-form-container">
+        <form asp-action="Edit" method="post">
+            <input asp-for="Id" type="hidden" />
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label asp-for="Name">Nombre del Plan</label>
+                    <input asp-for="Name" class="form-control" placeholder="Ej: Premium" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Price">Precio Mensual ($)</label>
+                    <input asp-for="Price" class="form-control" type="number" step="0.01" min="0" placeholder="9.99" />
+                    <span asp-validation-for="Price" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Description">Descripción</label>
+                <textarea asp-for="Description" class="form-control" rows="3" placeholder="Descripción del plan..."></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label asp-for="DurationInMonths">Duración (meses)</label>
+                    <input asp-for="DurationInMonths" class="form-control" type="number" min="1" placeholder="1" />
+                    <span asp-validation-for="DurationInMonths" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="MaxPlaylists">Máximo de Playlists</label>
+                    <input asp-for="MaxPlaylists" class="form-control" type="number" placeholder="-1 para ilimitadas" />
+                    <span asp-validation-for="MaxPlaylists" class="text-danger"></span>
+                    <small style="color: #6c757d;">Usa -1 para playlists ilimitadas</small>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Características del Plan</label>
+                    <div class="checkbox-group">
+                        <input asp-for="AllowDownloads" type="checkbox" />
+                        <label asp-for="AllowDownloads">Permitir descargas</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input asp-for="AllowOfflineMode" type="checkbox" />
+                        <label asp-for="AllowOfflineMode">Modo offline</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input asp-for="HasAds" type="checkbox" />
+                        <label asp-for="HasAds">Incluir anuncios</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input asp-for="IsActive" type="checkbox" />
+                        <label asp-for="IsActive">Plan activo</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="admin-actions" style="justify-content: center; margin-top: 30px;">
+                <button type="submit" class="btn-admin-primary">
+                    <i class="fas fa-save"></i> Guardar Cambios
+                </button>
+                <a asp-action="Details" asp-route-id="@Model.Id" class="btn-admin-action" style="background: #17a2b8; color: white;">
+                    <i class="fas fa-eye"></i> Ver Detalles
+                </a>
+                <a asp-action="Index" class="btn-admin-action" style="background: #6c757d; color: white;">
+                    <i class="fas fa-times"></i> Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

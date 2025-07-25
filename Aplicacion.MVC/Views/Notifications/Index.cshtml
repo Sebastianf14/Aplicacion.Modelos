@@ -1,0 +1,114 @@
+﻿@model IEnumerable<Aplicacion.Modelos.Implementations.Notificacion>
+@{
+    ViewData["Title"] = "Notificaciones";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/notifications.css" />
+
+<div class="notifications-container">
+    <div class="notifications-header">
+        <h1><i class="fas fa-bell"></i> Notificaciones</h1>
+        <p>Mantente al día con todas las novedades</p>
+    </div>
+
+    <div class="notifications-actions">
+        <div class="notifications-filter">
+            <a href="@Url.Action("Index")" class="filter-btn @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
+                <i class="fas fa-list"></i> Todas
+            </a>
+            <a href="@Url.Action("Unread")" class="filter-btn @(ViewContext.RouteData.Values["action"]?.ToString() == "Unread" ? "active" : "")">
+                <i class="fas fa-circle"></i> No leídas
+            </a>
+        </div>
+
+        @if (Model.Any(n => !n.IsRead))
+        {
+            <form asp-action="MarkAllAsRead" method="post" style="display: inline;">
+                <button type="submit" class="filter-btn" style="background: rgba(78, 205, 196, 0.8);">
+                    <i class="fas fa-check-double"></i> Marcar todas como leídas
+                </button>
+            </form>
+        }
+    </div>
+
+    <div class="notifications-list">
+        @if (Model.Any())
+        {
+            @foreach (var notification in Model)
+            {
+                <div class="notification-item @(notification.IsRead ? "read" : "unread")">
+                    <div class="notification-content">
+                        <div class="notification-icon @notification.Type.ToString().ToLower()">
+                            @switch (notification.Type)
+                            {
+                                case Aplicacion.Modelos.Implementations.Notificacion.NotificationType.NewMusic:
+                                    <i class="fas fa-music"></i>
+                                    break;
+                                case Aplicacion.Modelos.Implementations.Notificacion.NotificationType.Welcome:
+                                    <i class="fas fa-hand-wave"></i>
+                                    break;
+                                case Aplicacion.Modelos.Implementations.Notificacion.NotificationType.SubscriptionExpiry:
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    break;
+                                default:
+                                    <i class="fas fa-info-circle"></i>
+                                    break;
+                            }
+                        </div>
+
+                        <div class="notification-body">
+                            <div class="notification-title">@notification.Title</div>
+                            <div class="notification-message">@notification.Message</div>
+                            <div class="notification-time">
+                                @{
+                                    var timeAgo = DateTime.Now - notification.CreatedDate;
+                                    string timeText;
+                                    if (timeAgo.TotalMinutes < 1)
+                                        timeText = "Ahora mismo";
+                                    else if (timeAgo.TotalHours < 1)
+                                        timeText = $"Hace {(int)timeAgo.TotalMinutes} min";
+                                    else if (timeAgo.TotalDays < 1)
+                                        timeText = $"Hace {(int)timeAgo.TotalHours}h";
+                                    else
+                                        timeText = notification.CreatedDate.ToString("dd/MM/yyyy");
+                                }
+                                <i class="fas fa-clock"></i> @timeText
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="notification-actions">
+                        @if (!notification.IsRead)
+                        {
+                            <form asp-action="MarkAsRead" method="post" style="display: inline;">
+                                <input type="hidden" name="id" value="@notification.Id" />
+                                <button type="submit" class="btn-notification btn-read">
+                                    <i class="fas fa-check"></i> Marcar leída
+                                </button>
+                            </form>
+                        }
+
+                        @if (!string.IsNullOrEmpty(notification.ActionUrl))
+                        {
+                            <a href="@notification.ActionUrl" class="btn-notification btn-action">
+                                <i class="fas fa-external-link-alt"></i> Ver
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="empty-notifications">
+                <i class="fas fa-bell-slash"></i>
+                <h3>No tienes notificaciones</h3>
+                <p>Te avisaremos cuando haya novedades importantes</p>
+                <a href="@Url.Action("Search", "Musics")" class="btn-notification btn-action">
+                    <i class="fas fa-music"></i> Explorar Música
+                </a>
+            </div>
+        }
+    </div>
+</div>

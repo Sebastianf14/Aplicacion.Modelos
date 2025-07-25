@@ -1,0 +1,112 @@
+﻿@model IEnumerable<Aplicacion.Modelos.Suscription.SubscriptionPlan>
+@{
+    ViewData["Title"] = "Gestión de Planes";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/admin-plans.css" />
+
+<div class="admin-plans-container">
+    <div class="admin-header">
+        <h1><i class="fas fa-gem"></i> Gestión de Planes de Suscripción</h1>
+        @* <a asp-action="Create" class="btn-admin-primary">
+            <i class="fas fa-plus"></i> Crear Nuevo Plan
+        </a> *@
+    </div>
+
+    <div class="admin-table-container">
+        <h4>Planes Disponibles (@Model.Count())</h4>
+
+        @if (Model.Any())
+        {
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Plan</th>
+                        <th>Precio</th>
+                        <th>Duración</th>
+                        <th>Descargas</th>
+                        <th>Playlists</th>
+                        <th>Anuncios</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var plan in Model.OrderBy(p => p.Price))
+                    {
+                        <tr>
+                            <td>
+                                <div class="plan-name">@plan.Name</div> 
+                                <small style="color: #6c757d;">@plan.Description</small>
+                            </td>
+                            <td>
+                                <span class="plan-price @(plan.Price == 0 ? "free" : "")">
+                                    @if (plan.Price == 0)
+                                    {
+                                        <text>Gratuito</text>
+                                    }
+                                    else
+                                    {
+                                        <text>$@plan.Price.ToString("F2")</text>
+                                    }
+                                </span>
+                            </td>
+                            <td>@plan.DurationInMonths mes(es)</td>
+                            <td>
+                                @if (plan.AllowDownloads)
+                                {
+                                    <span class="feature-icon feature-yes">✅</span>
+                                }
+                                else
+                                {
+                                    <span class="feature-icon feature-no">❌</span>
+                                }
+                            </td>
+                            <td>
+                                @if (plan.MaxPlaylists == -1)
+                                {
+                                    <text>Ilimitadas</text>
+                                }
+                                else
+                                {
+                                    <text>@plan.MaxPlaylists</text>
+                                }
+                            </td>
+                            <td>
+                                @if (plan.HasAds)
+                                {
+                                    <span class="feature-icon feature-no">❌ Con anuncios</span>
+                                }
+                                else
+                                {
+                                    <span class="feature-icon feature-yes">✅ Sin anuncios</span>
+                                }
+                            </td>
+                            <td>
+                                <span class="status-badge @(plan.IsActive ? "status-active" : "status-inactive")">
+                                    @(plan.IsActive ? "Activo" : "Inactivo")
+                                </span>
+                            </td>
+                            <td>
+                                <div class="admin-actions">
+                                    <a asp-action="Details" asp-route-id="@plan.Id" class="btn-admin-action btn-admin-view"><i class="fas fa-eye"></i> Ver</a>
+                                    <a asp-action="Edit" asp-route-id="@plan.Id" class="btn-admin-action btn-admin-edit"><i class="fas fa-edit"></i> Editar</a>
+                                    <a asp-action="Toggle" asp-route-id="@plan.Id" class="btn-admin-action btn-admin-toggle"><i class="fas fa-power-off"></i>@(plan.IsActive ? "Desactivar" : "Activar")</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div style="text-align: center; padding: 40px; color: #6c757d;">
+                <i class="fas fa-gem" style="font-size: 3rem; margin-bottom: 15px;"></i>
+                <h4>No hay planes configurados</h4>
+                <p>Crea el primer plan de suscripción</p>
+            </div>
+        }
+    </div>
+</div>

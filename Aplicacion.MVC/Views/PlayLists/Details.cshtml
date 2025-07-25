@@ -1,0 +1,462 @@
+﻿@model Aplicacion.Modelos.Playlist
+@{
+    ViewData["Title"] = "Detalles de la Playlist";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- Información de la Playlist -->
+        <div class="col-md-4">
+            <div class="playlist-cover-large">
+                <div class="default-playlist-cover">
+                    <i class="fas fa-list"></i>
+                </div>
+            </div>
+            
+            <div class="playlist-info mt-3">
+                <h3>@Model.Name</h3>
+                <p class="text-muted">
+                    <i class="fas fa-user"></i> @Model.User?.FirstName @Model.User?.LastName
+                </p>
+                <p class="text-muted">
+                    <i class="fas fa-calendar"></i> Creada el @Model.CreatedDate.ToString("dd 'de' MMMM 'de' yyyy")
+                </p>
+                <div class="playlist-status">
+                    @if (Model.IsPublic)
+                    {
+                        <span class="badge bg-success">
+                            <i class="fas fa-globe"></i> Pública
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning">
+                            <i class="fas fa-lock"></i> Privada
+                        </span>
+                    }
+                </div>
+                
+                @if (!string.IsNullOrEmpty(Model.Description))
+                {
+                    <div class="playlist-description">
+                        <h6><i class="fas fa-info-circle"></i> Descripción:</h6>
+                        <p>@Model.Description</p>
+                    </div>
+                }
+                
+                <!-- Estadísticas -->
+                <div class="playlist-stats mt-3">
+                    <div class="stat-item">
+                        <i class="fas fa-music text-success"></i>
+                        <span>@(Model.PlaylistMusics?.Count ?? 0) canción(es)</span>
+                    </div>
+                    @if (Model.PlaylistMusics?.Any() == true)
+                    {
+                        <div class="stat-item">
+                            <i class="fas fa-clock text-info"></i>
+                            <span>Duración total aprox.</span>
+                        </div>
+                    }
+                </div>
+                
+                <!-- Botones de acción -->
+                <div class="mt-3">
+                    @if (User.IsInRole("users"))
+                    {
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning btn-sm">
+                            <i class="fas fa-edit"></i> Editar
+                        </a>
+                    }
+                    <a asp-action="Index" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-arrow-left"></i> Volver
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Lista de Músicas en la Playlist -->
+        <div class="col-md-8">
+            <div class="playlist-tracks">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4><i class="fas fa-music"></i> Canciones en la Playlist</h4>
+                    @if (Model.PlaylistMusics?.Any() == true)
+                    {
+                        <span class="badge bg-success">@Model.PlaylistMusics.Count canción(es)</span>
+                    }
+                </div>
+                
+                @if (Model.PlaylistMusics?.Any() == true)
+                {
+                    <!-- Botones de reproducción principal -->
+                    <div class="mb-3 text-center">
+                        <button class="btn btn-success btn-lg me-2" onclick="playPlaylistFromDetails()">
+                            <i class="fas fa-play"></i> Reproducir Playlist
+                        </button>
+                        <button class="btn btn-outline-success" onclick="shufflePlaylistFromDetails()">
+                            <i class="fas fa-random"></i> Aleatorio
+                        </button>
+                    </div>
+                    
+                    <div class="tracks-list">
+                        @{int trackNumber = 1;}
+                        @foreach (var playlistMusic in Model.PlaylistMusics.OrderBy(pm => pm.Order))
+                        {
+                            var music = playlistMusic.Music;
+                            <div class="track-item playlist-track" data-track-index="@(trackNumber - 1)">
+                                <div class="track-info">
+                                    <div class="track-number">
+                                        @trackNumber
+                                    </div>
+                                    <div class="track-details">
+                                        <h6 class="track-title">@music.Title</h6>
+                                        <p class="track-meta">
+                                            <strong>@music.Artist?.FirstName @music.Artist?.LastName</strong> • 
+                                            @music.Genre.ToString()
+                                            @if (!string.IsNullOrEmpty(music.Duration))
+                                            {
+                                                <span> • @music.Duration</span>
+                                            }
+                                        </p>
+                                        <p class="track-added text-muted">
+                                            <small>
+                                                <i class="fas fa-plus-circle"></i> 
+                                                Agregada el @playlistMusic.AddedDate.ToString("dd/MM/yyyy")
+                                            </small>
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="track-actions">
+                                    <button class="btn btn-success btn-sm" 
+                                            onclick="playMusic(@music.Id, '@music.Title', '@music.Artist?.FirstName @music.Artist?.LastName', '/files/@music.FilePath')"
+                                            title="Reproducir solo esta canción">
+                                        <i class="fas fa-play"></i>
+                                    </button>
+                                    
+                                    <button class="btn btn-outline-primary btn-sm ms-1" 
+                                            onclick="playFromTrack(@(trackNumber - 1))"
+                                            title="Reproducir desde aquí">
+                                        <i class="fas fa-list-ul"></i>
+                                    </button>
+                                    
+                                    @if (User.IsInRole("users") || User.IsInRole("admins"))
+                                    {
+                                        <button class="btn btn-outline-danger btn-sm ms-1" 
+                                                onclick="confirmRemoveFromPlaylist(@Model.Id, @music.Id, '@music.Title')"
+                                                title="Quitar de la playlist">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                            trackNumber++;
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="no-tracks text-center py-5">
+                        <i class="fas fa-list fa-3x text-muted mb-3"></i>
+                        <h5>Playlist vacía</h5>
+                        <p class="text-muted">
+                            Agrega música a esta playlist desde el catálogo de canciones.
+                        </p>
+                        
+                        @if (User.IsInRole("users"))
+                        {
+                            <a asp-controller="Musics" asp-action="Search" class="btn btn-primary mt-2">
+                                <i class="fas fa-search"></i> Explorar Música
+                            </a>
+                        }
+                    </div>
+                }
+                
+                <!-- Agregar más música -->
+                @if (User.IsInRole("users") && Model.PlaylistMusics?.Any() == true)
+                {
+                    <div class="add-more-section mt-4 p-3 bg-light rounded">
+                        <h6><i class="fas fa-plus"></i> Agregar más música</h6>
+                        <p class="text-muted mb-2">Encuentra más canciones para tu playlist</p>
+                        <a asp-controller="Musics" asp-action="Search" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-search"></i> Explorar Catálogo
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación para quitar canción -->
+<div class="modal fade" id="removeTrackModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-warning">
+                    <i class="fas fa-exclamation-triangle"></i> Confirmar
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que quieres quitar "<span id="trackToRemove"></span>" de esta playlist?</p>
+                <div class="alert alert-warning">
+                    <i class="fas fa-info-circle"></i> 
+                    Esta acción no se puede deshacer. La canción se quitará de la playlist.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" onclick="removeFromPlaylist()">
+                    <i class="fas fa-trash"></i> Quitar de Playlist
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .playlist-cover-large {
+        text-align: center;
+    }
+    
+    .default-playlist-cover {
+        width: 100%;
+        height: 300px;
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        color: white;
+        font-size: 80px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    
+    .playlist-info h3 {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        color: #333;
+    }
+    
+    .playlist-status {
+        margin: 10px 0;
+    }
+    
+    .playlist-description {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        border-left: 4px solid #28a745;
+        margin-top: 15px;
+    }
+    
+    .playlist-description h6 {
+        color: #28a745;
+        margin-bottom: 8px;
+    }
+    
+    .playlist-stats {
+        background: #fff;
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .stat-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+    
+    .stat-item i {
+        margin-right: 8px;
+        width: 16px;
+    }
+    
+    .tracks-list {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .playlist-track {
+        border-left: 4px solid #28a745;
+    }
+    
+    .track-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 20px;
+        border-bottom: 1px solid #f0f0f0;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    
+    .track-item:hover {
+        background-color: #f8f9fa;
+        transform: translateX(5px);
+    }
+    
+    .track-item:last-child {
+        border-bottom: none;
+    }
+    
+    .track-info {
+        display: flex;
+        align-items: center;
+        flex: 1;
+    }
+    
+    .track-number {
+        width: 35px;
+        height: 35px;
+        background: #28a745;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 15px;
+        font-size: 14px;
+        box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+    }
+    
+    .track-details {
+        flex: 1;
+    }
+    
+    .track-title {
+        margin: 0 0 4px 0;
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .track-meta {
+        margin: 0 0 2px 0;
+        color: #666;
+        font-size: 14px;
+    }
+    
+    .track-added {
+        margin: 0;
+        font-size: 12px;
+    }
+    
+    .track-actions {
+        display: flex;
+        align-items: center;
+    }
+    
+    .no-tracks {
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin: 20px 0;
+    }
+    
+    .add-more-section {
+        border: 2px dashed #28a745;
+    }
+    
+    .btn-lg {
+        padding: 12px 30px;
+        font-size: 1.1rem;
+    }
+</style>
+
+<script>
+    let playlistId = 0;
+    let musicId = 0;
+    
+    const playlistTracks = @Html.Raw(ViewBag.PlaylistTracksJson ?? "[]");
+
+    function playPlaylistFromDetails() {
+        if (playlistTracks.length === 0) {
+            alert('No hay canciones en esta playlist');
+            return;
+        }
+        
+        console.log('Reproduciendo playlist:', playlistTracks);
+        
+        // Llamar función global del reproductor
+        if (typeof playPlaylist === 'function') {
+            playPlaylist(playlistTracks);
+        } else {
+            console.error('Función playPlaylist no encontrada');
+            alert('Error: Reproductor no disponible');
+        }
+    }
+
+    function shufflePlaylistFromDetails() {
+        if (playlistTracks.length === 0) {
+            alert('No hay canciones en esta playlist');
+            return;
+        }
+        
+        console.log('Reproduciendo aleatoriamente:', playlistTracks);
+        
+        // Llamar función global del reproductor
+        if (typeof shufflePlaylist === 'function') {
+            shufflePlaylist(playlistTracks);
+        } else {
+            console.error('Función shufflePlaylist no encontrada');
+            alert('Error: Reproductor no disponible');
+        }
+    }
+
+    function playFromTrack(trackIndex) {
+        if (playlistTracks.length === 0 || trackIndex >= playlistTracks.length) {
+            alert('No se puede reproducir desde esta posición');
+            return;
+        }
+        
+        console.log('Reproduciendo desde track:', trackIndex);
+        
+        // Crear una nueva playlist empezando desde el track seleccionado
+        const playlistFromTrack = playlistTracks.slice(trackIndex);
+        
+        if (typeof playPlaylist === 'function') {
+            playPlaylist(playlistFromTrack);
+        } else {
+            console.error('Función playPlaylist no encontrada');
+        }
+    }
+
+    function confirmRemoveFromPlaylist(pId, mId, title) {
+        playlistId = pId;
+        musicId = mId;
+        document.getElementById('trackToRemove').textContent = title;
+        new bootstrap.Modal(document.getElementById('removeTrackModal')).show();
+    }
+
+    function removeFromPlaylist() {
+        // Crear form para POST
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/PlaylistMusic/RemoveFromPlaylist';
+        
+        // Obtener token antiforgery
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || 
+                     document.querySelector('[name="__RequestVerificationToken"]')?.value;
+        
+        form.innerHTML = `
+            ${token ? `<input type="hidden" name="__RequestVerificationToken" value="${token}">` : ''}
+            <input type="hidden" name="playlistId" value="${playlistId}">
+            <input type="hidden" name="musicId" value="${musicId}">
+        `;
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    // Debug: Mostrar array en consola
+    console.log('Playlist tracks loaded:', playlistTracks);
+</script>
+
+<!-- Token antiforgery para formularios -->
+<form style="display: none;">
+    @Html.AntiForgeryToken()
+</form>

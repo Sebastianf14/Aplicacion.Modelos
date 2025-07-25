@@ -1,0 +1,82 @@
+﻿@model IEnumerable<Aplicacion.Modelos.Identity.User>
+@{
+    ViewData["Title"] = "Descubrir Artistas";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/follow.css" />
+
+<div class="follow-container">
+    <div class="follow-header">
+        <h1><i class="fas fa-compass"></i> Descubrir Artistas</h1>
+        <p>Encuentra nuevos artistas para seguir</p>
+    </div>
+
+    <!-- Tabs de navegación -->
+    <div class="follow-tabs">
+        <a href="@Url.Action("Index")" class="follow-tab">
+            <i class="fas fa-heart"></i> Siguiendo
+        </a>
+        <a href="@Url.Action("Followers")" class="follow-tab">
+            <i class="fas fa-users"></i> Seguidores
+        </a>
+        <a href="@Url.Action("Discover")" class="follow-tab active">
+            <i class="fas fa-compass"></i> Descubrir
+        </a>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="artists-grid">
+            @foreach (var artist in Model)
+            {
+                <div class="artist-card">
+                    <div class="artist-avatar">
+                        <i class="fas fa-microphone"></i>
+                    </div>
+                    <div class="artist-info">
+                        <h3>@artist.FirstName @artist.LastName</h3>
+                        <p><i class="fas fa-envelope"></i> @artist.Email</p>
+                        <p><i class="fas fa-calendar"></i> Miembro desde @artist.RegistrationDate.ToString("MMMM yyyy")</p>
+                    </div>
+
+                    <div class="artist-stats">
+                        <div class="stat-item">
+                            <div class="stat-number">@(artist.Musics?.Count ?? 0)</div>
+                            <div class="stat-label">Canciones</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">@(artist.Albums?.Count ?? 0)</div>
+                            <div class="stat-label">Álbumes</div>
+                        </div>
+                    </div>
+
+                    <div class="artist-actions">
+                        <form asp-action="FollowArtist" method="post" style="display: inline;">
+                            <input type="hidden" name="artistId" value="@artist.Id" />
+                            <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                            <button type="submit" class="btn-follow">
+                                <i class="fas fa-user-plus"></i> Seguir
+                            </button>
+                        </form>
+
+                        <a href="@Url.Action("Search", "Musics", new { query = artist.FirstName + " " + artist.LastName })" class="btn-follow btn-view-music">
+                            <i class="fas fa-music"></i> Ver Música
+                        </a>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="empty-follows">
+            <i class="fas fa-compass"></i>
+            <h3>No hay artistas nuevos que descubrir</h3>
+            <p>Ya sigues a todos los artistas disponibles o no hay artistas registrados</p>
+            <a href="@Url.Action("Index")" class="btn-follow">
+                <i class="fas fa-heart"></i> Ver Siguiendo
+            </a>
+        </div>
+    }
+</div>

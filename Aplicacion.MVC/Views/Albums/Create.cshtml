@@ -1,0 +1,81 @@
+﻿@model Aplicacion.Modelos.Album
+
+@{
+    ViewData["Title"] = "Crear Album";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3><i class="fas fa-compact-disc"></i> Crear Nuevo Album</h3>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Name" class="form-label">
+                                    <i class="fas fa-tag"></i> Nombre del Album *
+                                </label>
+                                <input asp-for="Name" class="form-control" placeholder="Ej: Mi Primer Album" />
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="ReleaseDate" class="form-label">
+                                    <i class="fas fa-calendar"></i> Fecha de Lanzamiento *
+                                </label>
+                                <input asp-for="ReleaseDate" type="date" class="form-control" />
+                                <span asp-validation-for="ReleaseDate" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">
+                                <i class="fas fa-align-left"></i> Descripción
+                            </label>
+                            <textarea asp-for="Description" class="form-control" rows="4"
+                                      placeholder="Describe tu album, inspiración, mensaje..."></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="CoverImagePath" class="form-label">
+                                <i class="fas fa-image"></i> URL de Portada (opcional)
+                            </label>
+                            <input asp-for="CoverImagePath" class="form-control"
+                                   placeholder="https://ejemplo.com/portada.jpg" />
+                            <div class="form-text">
+                                <i class="fas fa-info-circle"></i> Puedes agregar una imagen de portada más tarde
+                            </div>
+                            <span asp-validation-for="CoverImagePath" class="text-danger"></span>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-lightbulb"></i>
+                            <strong>Tip:</strong> Una vez creado el album, podrás asignar músicas cuando las subas.
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Crear Album
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -1,0 +1,160 @@
+﻿
+@model Aplicacion.Modelos.Musica
+@{
+    ViewData["Title"] = $"Detalles - {Model.Title}";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/gestion-music.css" />
+
+<div class="gestion-music-container">
+    <!-- Header con botón de regreso -->
+    <div class="music-details-header">
+        <div class="back-navigation">
+            <a href="javascript:history.back()" class="btn-back">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
+        </div>
+        <h1><i class="fas fa-music"></i> Detalles de la Música</h1>
+    </div>
+
+    <!-- Card principal de detalles -->
+    <div class="music-details-card">
+        <div class="music-cover-section">
+            <div class="music-cover">
+                <i class="fas fa-music"></i>
+            </div>
+            <div class="music-primary-info">
+                <h2>@Model.Title</h2>
+
+                <p class="artist-name">
+                    <i class="fas fa-user"></i>
+                    @if (Model.Artist != null)
+                    {
+                        @Model.Artist.FirstName @Model.Artist.LastName
+                    }
+                    else
+                    {
+                        <span>Artista ID: @Model.ArtistId</span>
+                    }
+                </p>
+                <p class="album-name">
+                    <i class="fas fa-album-collection"></i>
+                    @if (Model.Album != null)
+                    {
+                        @Model.Album.Name
+                    }
+                    else if (Model.AlbumId.HasValue)
+                    {
+                        <span>Álbum ID: @Model.AlbumId</span>
+                    }
+                    else
+                    {
+                        <span class="no-album">Sin álbum</span>
+                    }
+                </p>
+            </div>
+        </div>
+
+        <!-- Información detallada -->
+        <div class="music-info-grid">
+            <div class="info-item">
+                <label><i class="fas fa-hashtag"></i> ID</label>
+                <span>@Model.Id</span>
+            </div>
+            <div class="info-item">
+                <label><i class="fas fa-user"></i> Artista</label>
+                <span>
+                    @if (Model.Artist != null)
+                    {
+                        @Model.Artist.FirstName @Model.Artist.LastName
+                    }
+                    else
+                    {
+                        <span>Artista ID: @Model.ArtistId</span>
+                    }
+                </span>
+            </div>
+            <div class="info-item">
+                <label><i class="fas fa-clock"></i> Duración</label>
+                <span>@(Model.Duration ?? "No especificada")</span>
+            </div>
+            <div class="info-item">
+                <label><i class="fas fa-tags"></i> Género</label>
+                <span class="genre-badge">@Model.Genre</span>
+            </div>
+            <div class="info-item">
+                <label><i class="fas fa-calendar-plus"></i> Fecha de Subida</label>
+                <span>@Model.UploadDate.ToString("dd/MM/yyyy HH:mm")</span>
+            </div>
+            <div class="info-item full-width">
+                <label><i class="fas fa-align-left"></i> Descripción</label>
+                <span>@(string.IsNullOrEmpty(Model.Description) ? "Sin descripción" : Model.Description)</span>
+            </div>
+        </div>
+
+        <!-- Reproductor integrado -->
+        <div class="embedded-player">
+            <h3><i class="fas fa-headphones"></i> Reproductor</h3>
+            <div class="player-controls">
+                <button onclick="playThisMusic()" class="btn-play-large">
+                    <i class="fas fa-play"></i> Reproducir
+                </button>
+                <audio id="detailsAudioPlayer" controls style="width: 100%; margin-top: 10px;">
+                    <source src="/files/@Model.FilePath" type="audio/mpeg">
+                    Tu navegador no soporta el elemento de audio.
+                </audio>
+            </div>
+        </div>
+
+        <!-- Descarga directa (disponible para todos) -->
+        <div class="download-section">
+            <h3><i class="fas fa-download"></i> Descarga</h3>
+            <div class="download-actions">
+                <a href="/files/@Model.FilePath" download class="btn-download-large">
+                    <i class="fas fa-download"></i> Descargar Música
+                </a>
+            </div>
+        </div>
+
+        <!-- Gestión (solo para propietarios/admins) -->
+        @if (User.IsInRole("admins") || User.IsInRole("artists"))
+        {
+            <div class="management-section">
+                <h3><i class="fas fa-tools"></i> Gestión</h3>
+                <div class="management-actions">
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-management btn-edit">
+                        <i class="fas fa-edit"></i> Editar
+                    </a>
+                    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn-management btn-delete">
+                        <i class="fas fa-trash"></i> Eliminar
+                    </a>
+                    <a asp-action="Index" class="btn-management btn-list">
+                        <i class="fas fa-list"></i> Ver Todas
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Modal eliminado - ya no se necesita -->
+
+<script>
+    // Función para reproducir esta música específica
+    function playThisMusic() {
+        const title = '@Model.Title';
+        const artist = '@(Model.Artist?.FirstName ?? "") @(Model.Artist?.LastName ?? "")';
+        const filePath = '/files/@Model.FilePath';
+
+        // Reproducir en el player de la página
+        const player = document.getElementById('detailsAudioPlayer');
+        player.play();
+
+        // También actualizar el reproductor principal si existe
+        if (typeof window.setCurrentTrack === 'function') {
+            window.setCurrentTrack(filePath, title, artist.trim());
+            window.playAudio();
+        }
+    }
+</script>

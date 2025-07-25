@@ -1,0 +1,74 @@
+﻿@using Aplicacion.MVC
+@using Aplicacion.MVC.Models
+@using Aplicacion.Modelos
+@model IEnumerable<Aplicacion.Modelos.Album>
+@{
+    ViewData["Title"] = "Albums";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        @if (User.IsInRole("artists"))
+        {
+            @:<i class="fas fa-compact-disc"></i> Mis Albums
+        }
+        else
+        {
+            @:<i class="fas fa-compact-disc"></i> Todos los Albums
+        }
+    </h1>
+    @if (User.IsInRole("artists"))
+    {
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Crear Album
+        </a>
+    }
+</div>
+
+<div class="row">
+    @foreach (var album in Model)
+    {
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">@album.Name</h5>
+                    <p class="card-text">@album.Description</p>
+                    <p class="text-muted">
+                        <i class="fas fa-calendar"></i> @album.ReleaseDate.ToString("dd/MM/yyyy")
+                    </p>
+                    <div class="btn-group" role="group">
+                        <a asp-action="Details" asp-route-id="@album.Id" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-eye"></i> Ver
+                        </a>
+                        @if (User.IsInRole("artists"))
+                        {
+                            <a asp-action="Edit" asp-route-id="@album.Id" class="btn btn-outline-warning btn-sm">
+                                <i class="fas fa-edit"></i> Editar
+                            </a>
+                        }
+                        @if (User.IsInRole("artists") || User.IsInRole("admins"))
+                        {
+                            <a asp-action="Delete" asp-route-id="@album.Id" class="btn btn-outline-danger btn-sm">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@if (!Model.Any())
+{
+    <div class="text-center mt-5">
+        <i class="fas fa-compact-disc fa-3x text-muted"></i>
+        <p class="mt-3 text-muted">No hay albums disponibles</p>
+        @if (User.IsInRole("artists"))
+        {
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Crear tu primer album
+            </a>
+        }
+    </div>
+}

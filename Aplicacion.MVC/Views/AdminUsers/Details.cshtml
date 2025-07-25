@@ -1,0 +1,145 @@
+﻿@model Aplicacion.MVC.Models.Admin.UserDetailsViewModel
+@{
+    ViewData["Title"] = $"Detalles - {Model.FirstName} {Model.LastName}";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<link rel="stylesheet" href="~/css/admin.css" />
+
+<div class="admin-container">
+    <div class="admin-header">
+        <h1>
+            <i class="fas fa-user-circle"></i> 
+            @Model.FirstName @Model.LastName
+        </h1>
+        <p>Información detallada del @(Model.Role == "artists" ? "artista" : "usuario")</p>
+    </div>
+
+    <!-- Información básica -->
+    <div class="details-grid">
+        <div class="details-card">
+            <h5><i class="fas fa-info-circle"></i> Información Personal</h5>
+            <ul class="details-list">
+                <li>
+                    <span>Nombre completo:</span>
+                    <strong>@Model.FirstName @Model.LastName</strong>
+                </li>
+                <li>
+                    <span>Email:</span>
+                    <strong>@Model.Email</strong>
+                </li>
+                <li>
+                    <span>Rol:</span>
+                    <span class="status-badge status-@Model.Role">
+                        @switch (Model.Role)
+                        {
+                            case "artists":
+                                <i class="fas fa-palette"></i> <text>Artista</text>
+                                break;
+                            default:
+                                <i class="fas fa-user"></i> <text>Usuario</text>
+                                break;
+                        }
+                    </span>
+                </li>
+                <li>
+                    <span>Fecha de registro:</span>
+                    <strong>@Model.RegistrationDate.ToString("dd/MM/yyyy HH:mm")</strong>
+                </li>
+            </ul>
+        </div>
+
+        <div class="details-card">
+            <h5>
+                <i class="fas fa-chart-bar"></i> 
+                @(Model.Role == "artists" ? "Estadísticas de Artista" : "Estadísticas de Usuario")
+            </h5>
+            <ul class="details-list">
+                @if (Model.Role == "artists")
+                {
+                    <li>
+                        <span><i class="fas fa-music"></i> Canciones subidas:</span>
+                        <strong>@Model.MusicCount</strong>
+                    </li>
+                    <li>
+                        <span><i class="fas fa-compact-disc"></i> Álbumes creados:</span>
+                        <strong>@Model.AlbumCount</strong>
+                    </li>
+                    <li>
+                        <span><i class="fas fa-users"></i> Seguidores:</span>
+                        <strong>@Model.FollowerCount</strong>
+                    </li>
+                }
+                else
+                {
+                    <li>
+                        <span><i class="fas fa-list"></i> Playlists creadas:</span>
+                        <strong>@Model.PlaylistCount</strong>
+                    </li>
+                    <li>
+                        <span><i class="fas fa-download"></i> Descargas realizadas:</span>
+                        <strong>@Model.DownloadCount</strong>
+                    </li>
+                    <li>
+                        <span><i class="fas fa-heart"></i> Artistas seguidos:</span>
+                        <strong>@Model.FollowingCount</strong>
+                    </li>
+                    <li>
+                        <span><i class="fas fa-crown"></i> Plan actual:</span>
+                        <span class="status-badge @(Model.SubscriptionPlan == "Gratuito" ? "status-inactive" : "status-premium")">
+                            @Model.SubscriptionPlan
+                        </span>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+
+    @if (Model.Role == "artists" && Model.RecentMusics.Any())
+    {
+        <!-- Canciones recientes del artista -->
+        <div class="admin-section">
+            <h4><i class="fas fa-clock"></i> Canciones Recientes</h4>
+            <div style="overflow-x: auto;">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Título</th>
+                            <th>Género</th>
+                            <th>Duración</th>
+                            <th>Subida</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var music in Model.RecentMusics)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@music.Title</strong>
+                                    @if (!string.IsNullOrEmpty(music.Description))
+                                    {
+                                        <br><small style="opacity: 0.7;">@music.Description</small>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="status-badge status-active">@music.Genre</span>
+                                </td>
+                                <td>@(music.Duration ?? "N/A")</td>
+                                <td>@music.UploadDate.ToString("dd/MM/yyyy")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+    <!-- Acciones -->
+    <div style="text-align: center; margin-top: 30px;">
+        <a href="@Url.Action("Index")" class="btn-admin btn-view" style="padding: 12px 24px; margin-right: 10px;">
+            <i class="fas fa-arrow-left"></i> Volver a la Lista
+        </a>
+        <a href="@Url.Action("Delete", new { id = Model.Id })" class="btn-admin btn-edit" style="background: rgba(244, 67, 54, 0.8); padding: 12px 24px;">
+            <i class="fas fa-trash"></i> Eliminar Usuario
+        </a>
+    </div>
+</div>

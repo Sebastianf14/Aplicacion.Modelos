@@ -1,0 +1,189 @@
+﻿@model IEnumerable<Aplicacion.Modelos.Implementations.Notificacion>
+@{
+    ViewData["Title"] = "Gestión de Notificaciones";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var stats = ViewBag.Stats;
+}
+
+<link rel="stylesheet" href="~/css/admin.css" />
+
+<div class="admin-container">
+    <div class="admin-header">
+        <h1><i class="fas fa-bell"></i> Panel de Notificaciones</h1>
+        <p>Administrar todas las notificaciones del sistema</p>
+    </div>
+
+    <!-- Estadísticas de notificaciones -->
+    <div class="admin-stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">🔔</div>
+            <div class="stat-number">@stats.Total</div>
+            <div class="stat-label">Total Notificaciones</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🔸</div>
+            <div class="stat-number">@stats.Unread</div>
+            <div class="stat-label">No Leídas</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📅</div>
+            <div class="stat-number">@stats.Today</div>
+            <div class="stat-label">Hoy</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📊</div>
+            <div class="stat-number">@stats.ThisWeek</div>
+            <div class="stat-label">Esta Semana</div>
+        </div>
+    </div>
+
+    <!-- Breakdown por tipo -->
+    <div class="admin-section">
+        <h4><i class="fas fa-chart-pie"></i> Notificaciones por Tipo</h4>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            <div style="background: rgba(78, 205, 196, 0.2); padding: 15px; border-radius: 10px; text-align: center;">
+                <div style="font-size: 1.5rem; color: #4ecdc4; font-weight: bold;">@stats.NewMusic</div>
+                <div style="font-size: 0.9rem; opacity: 0.8;">🎵 Nueva Música</div>
+                
+            </div>
+            <div style="background: rgba(102, 126, 234, 0.2); padding: 15px; border-radius: 10px; text-align: center;">
+                <div style="font-size: 1.5rem; color: #667eea; font-weight: bold;">@stats.Welcome</div>
+                <div style="font-size: 0.9rem; opacity: 0.8;">👋 Bienvenidas</div>
+                
+            </div>
+            <div style="background: rgba(255, 107, 107, 0.2); padding: 15px; border-radius: 10px; text-align: center;">
+                <div style="font-size: 1.5rem; color: #ff6b6b; font-weight: bold;">@stats.System</div>
+                <div style="font-size: 0.9rem; opacity: 0.8;">⚙️ Sistema</div>
+                
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="admin-section">
+        <div class="filter-tabs">
+            <a href="@Url.Action("Index")" class="filter-tab @(string.IsNullOrEmpty(ViewBag.FilterType) ? "active" : "")">
+                <i class="fas fa-list"></i> Todas las Notificaciones
+            </a>
+        </div>
+
+        <!-- Lista de notificaciones -->
+        <h4>
+            <i class="fas fa-history"></i>
+            @if (!string.IsNullOrEmpty(ViewBag.FilterType?.ToString()))
+            {
+                <text>Notificaciones: @ViewBag.FilterType (@Model.Count())</text>
+            }
+            else
+            {
+                <text>Todas las Notificaciones (@Model.Count())</text>
+            }
+        </h4>
+
+        @if (Model.Any())
+        {
+            <div style="overflow-x: auto;">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Tipo</th>
+                            <th>Título</th>
+                            <th>Mensaje</th>
+                            <th>Fecha</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var notification in Model.Take(50))
+                        {
+                            <tr>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="user-avatar">
+                                            @(notification.User?.FirstName?.Substring(0, 1).ToUpper() ?? "U")
+                                        </div>
+                                        <div class="user-details">
+                                            <h6>@notification.User?.FirstName @notification.User?.LastName</h6>
+                                            <small>ID: @notification.UserId</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-active">
+                                        @switch (notification.Type.ToString())
+                                        {
+                                            case "NewMusic":
+                                                <text>🎵 Música</text>
+                                                break;
+                                            case "Welcome":
+                                                <text>👋 Bienvenida</text>
+                                                break;
+                                            case "System":
+                                                <text>⚙️ Sistema</text>
+                                                break;
+                                            case "SubscriptionExpiry":
+                                                <text>⚠️ Vencimiento</text>
+                                                break;
+                                            default:
+                                                <text>@notification.Type</text>
+                                                break;
+                                        }
+                                    </span>
+                                </td>
+                                <td><strong>@notification.Title</strong></td>
+                                <td>
+                                    @if (notification.Message.Length > 50)
+                                    {
+                                        <span title="@notification.Message">
+                                            @notification.Message.Substring(0, 50)...
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        @notification.Message
+                                    }
+                                </td>
+                                <td>@notification.CreatedDate.ToString("dd/MM HH:mm")</td>
+                                <td>
+                                    @if (notification.IsRead)
+                                    {
+                                        <span style="color: #4caf50;">✅ Leída</span>
+                                    }
+                                    else
+                                    {
+                                        <span style="color: #ff9800;">🔸 No leída</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (Model.Count() > 50)
+            {
+                <p style="text-align: center; margin-top: 15px; opacity: 0.7;">
+                    Mostrando 50 de @Model.Count() notificaciones
+                </p>
+            }
+        }
+        else
+        {
+            <div style="text-align: center; padding: 40px;">
+                <i class="fas fa-bell-slash" style="font-size: 3rem; opacity: 0.5; margin-bottom: 15px;"></i>
+                <h5>No hay notificaciones</h5>
+                <p style="opacity: 0.7;">
+                    @if (!string.IsNullOrEmpty(ViewBag.FilterType?.ToString()))
+                    {
+                        <text>No hay notificaciones del tipo @ViewBag.FilterType</text>
+                    }
+                    else
+                    {
+                        <text>No se han generado notificaciones aún</text>
+                    }
+                </p>
+            </div>
+        }
+    </div>
+</div>

@@ -1,0 +1,62 @@
+﻿@model Aplicacion.Modelos.Identity.User
+@{
+    ViewData["Title"] = "Quitar Artista de Favoritos";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/favorites.css" />
+
+<div class="favorites-container">
+    <div class="favorites-header">
+        <h1><i class="fas fa-star"></i> Quitar Artista de Favoritos</h1>
+        <p>¿Estás seguro que deseas quitar este artista de tus favoritos?</p>
+    </div>
+
+    <div class="favorites-grid" style="max-width: 500px; margin: 0 auto;">
+        <div class="favorite-card">
+            <div class="artist-avatar" style="width: 100px; height: 100px; margin: 0 auto 20px auto;">
+                <i class="fas fa-microphone"></i>
+            </div>
+            <div class="favorite-info">
+                <h3>@Model.FirstName @Model.LastName</h3>
+                <p><i class="fas fa-envelope"></i> @Model.Email</p>
+                <p><i class="fas fa-calendar"></i> Miembro desde @Model.RegistrationDate.ToString("MMMM yyyy")</p>
+
+                <div class="artist-stats" style="display: flex; justify-content: space-around; margin: 15px 0; padding: 15px 0; border-top: 1px solid rgba(255,255,255,0.1); border-bottom: 1px solid rgba(255,255,255,0.1);">
+                    <div style="text-align: center;">
+                        <div style="font-weight: bold; color: #4ecdc4; font-size: 1.2rem;">@(Model.Musics?.Count ?? 0)</div>
+                        <div style="font-size: 0.8rem; opacity: 0.7;">Canciones</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-weight: bold; color: #4ecdc4; font-size: 1.2rem;">@(Model.Albums?.Count ?? 0)</div>
+                        <div style="font-size: 0.8rem; opacity: 0.7;">Álbumes</div>
+                    </div>
+                </div>
+
+                <div style="background: rgba(255, 107, 107, 0.2); padding: 15px; border-radius: 10px; margin-top: 15px; border-left: 4px solid #ff6b6b;">
+                    <p style="margin: 0; color: #ff6b6b;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Este artista será eliminado de tu lista de favoritos.</strong>
+                    </p>
+                </div>
+            </div>
+
+            <form asp-action="ConfirmRemoveArtist" method="post" class="favorite-actions">
+                <input type="hidden" name="artistId" value="@Model.Id" />
+                <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+
+                <button type="submit" class="btn-favorite">
+                    <i class="fas fa-star"></i> Sí, Quitar de Favoritos
+                </button>
+
+                <a href="@Url.Action("Artists")" class="btn-favorite btn-play">
+                    <i class="fas fa-times"></i> Cancelar
+                </a>
+
+                <a href="@Url.Action("Search", "Musics", new { query = Model.FirstName + " " + Model.LastName })" class="btn-favorite btn-view">
+                    <i class="fas fa-music"></i> Ver Su Música
+                </a>
+            </form>
+        </div>
+    </div>
+</div>

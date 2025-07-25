@@ -1,0 +1,147 @@
+﻿@model Aplicacion.Modelos.Musica
+@{
+    ViewData["Title"] = "Subir Nueva Música";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3><i class="fas fa-music"></i> Subir Nueva Música</h3>
+                </div>
+                <div class="card-body">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle"></i> @TempData["Success"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle"></i> @TempData["Error"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <form asp-action="Create" method="post" enctype="multipart/form-data">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <!-- Información de la canción -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Title" class="form-label">
+                                    <i class="fas fa-music"></i> Título de la canción *
+                                </label>
+                                <input asp-for="Title" class="form-control" placeholder="Nombre de tu canción" />
+                                <span asp-validation-for="Title" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Duration" class="form-label">
+                                    <i class="fas fa-clock"></i> Duración (opcional)
+                                </label>
+                                <input asp-for="Duration" class="form-control" placeholder="3:45 (se detectará automáticamente)" />
+                                <span asp-validation-for="Duration" class="text-danger"></span>
+                                <div class="form-text">Formato: mm:ss (ej: 3:45). Si no lo llenas, se estimará automáticamente.</div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Genre" class="form-label">
+                                    <i class="fas fa-tags"></i> Género musical *
+                                </label>
+                                <select asp-for="Genre" asp-items="ViewBag.Genres" class="form-select">
+                                    <option value="">-- Selecciona un género --</option>
+                                </select>
+                                <span asp-validation-for="Genre" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-compact-disc"></i> Album (opcional)
+                                </label>
+                                <select name="AlbumId" class="form-control">
+                                    @foreach (var album in ViewBag.Albums)
+                                    {
+                                        <option value="@album.Value">@album.Text</option>
+                                    }
+                                </select>
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle"></i> Selecciona un album para organizar tu música
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="MusicFile" class="form-label">
+                                    <i class="fas fa-file-audio"></i> Archivo de música *
+                                </label>
+                                <input type="file" name="MusicFile" class="form-control"
+                                       accept=".mp3,.wav,.flac,.m4a,.ogg"
+                                       required />
+                                <div class="form-text">Formatos permitidos: MP3, WAV, FLAC, M4A, OGG. Máximo 50MB.</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">
+                                <i class="fas fa-align-left"></i> Descripción
+                            </label>
+                            <textarea asp-for="Description" class="form-control" rows="3"
+                                      placeholder="Describe tu música, el estilo, inspiración, etc. (opcional)"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <!-- Información adicional -->
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Información:</strong>
+                            Tu música se guardará de forma segura y estará disponible inmediatamente después de la subida.
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Volver a la lista
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-cloud-upload-alt"></i> Subir Música
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        // Preview 
+        document.querySelector('input[type="file"]').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const fileSize = (file.size / 1024 / 1024).toFixed(2);
+                const fileName = file.name;
+
+                // Mostrar info del archivo
+                const info = document.createElement('div');
+                info.className = 'alert alert-success mt-2';
+                info.innerHTML = `<i class="fas fa-check"></i> Archivo seleccionado: <strong>${fileName}</strong> (${fileSize} MB)`;
+
+                // Remover info anterior si existe
+                const existingInfo = e.target.parentNode.querySelector('.alert');
+                if (existingInfo) existingInfo.remove();
+
+                e.target.parentNode.appendChild(info);
+            }
+        });
+    </script>
+}

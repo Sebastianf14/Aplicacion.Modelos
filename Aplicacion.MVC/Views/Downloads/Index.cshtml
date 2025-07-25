@@ -1,0 +1,58 @@
+﻿@model IEnumerable<Aplicacion.Modelos.Implementations.Download>
+@{
+    ViewData["Title"] = "Mis Descargas";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/downloads.css" />
+
+<div class="downloads-container">
+    <div class="downloads-header">
+        <h1><i class="fas fa-download"></i> Mis Descargas</h1>
+        <p>Gestiona tu biblioteca de música descargada</p>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="downloads-grid">
+            @foreach (var download in Model)
+            {
+                <div class="download-card">
+                    <div class="download-info">
+                        <h3>@download.Music?.Title</h3>
+                        <p><i class="fas fa-user"></i> @download.Music?.Artist?.FirstName @download.Music?.Artist?.LastName</p>
+                        <p><i class="fas fa-calendar"></i> Descargado: @download.DownloadDate.ToString("dd/MM/yyyy HH:mm")</p>
+                        <p>
+                            <span class="status-badge status-@(download.Status.ToString().ToLower())">
+                                @download.Status
+                            </span>
+                        </p>
+                    </div>
+                    <div class="download-actions">
+                        <a href="@Url.Action("Details", new { id = download.Id })" class="btn-download">
+                            <i class="fas fa-info-circle"></i> Detalles
+                        </a>
+                        <a href="/files/@download.Music?.FilePath" download class="btn-download">
+                            <i class="fas fa-download"></i> Descargar
+                        </a>
+                        <a href="@Url.Action("Delete", new { id = download.Id })" class="btn-download btn-danger-download">
+                            <i class="fas fa-trash"></i> Eliminar
+                        </a>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="empty-downloads">
+            <i class="fas fa-download"></i>
+            <h3>No tienes descargas</h3>
+            <p>Descarga música desde el explorador para verla aquí</p>
+            <a href="@Url.Action("Search", "Musics")" class="btn-download">
+                <i></i> 🔎 Explorar Música
+            </a>
+        </div>
+    }
+</div>
+

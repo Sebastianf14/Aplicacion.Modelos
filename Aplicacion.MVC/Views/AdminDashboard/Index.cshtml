@@ -1,0 +1,117 @@
+﻿@model Aplicacion.MVC.Models.Admin.SystemStatsViewModel
+@{
+    ViewData["Title"] = "Dashboard Administrativo";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/admin.css" />
+
+<div class="admin-container">
+    <div class="admin-header">
+        <h1><i class="fas fa-tachometer-alt"></i> Dashboard Administrativo</h1>
+        <p>Panel de control y estadísticas del sistema</p>
+    </div>
+
+    <!-- Estadísticas principales -->
+    <div class="admin-stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">👥</div>
+            <div class="stat-number">@Model.TotalUsers</div>
+            <div class="stat-label">Total Usuarios</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🎨</div>
+            <div class="stat-number">@Model.TotalArtists</div>
+            <div class="stat-label">Artistas Activos</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🎵</div>
+            <div class="stat-number">@Model.TotalMusics</div>
+            <div class="stat-label">Total Músicas</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📀</div>
+            <div class="stat-number">@Model.TotalAlbums</div>
+            <div class="stat-label">Álbumes</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📋</div>
+            <div class="stat-number">@Model.TotalPlaylists</div>
+            <div class="stat-label">Playlists</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">💳</div>
+            <div class="stat-number">@Model.PremiumSubscriptions</div>
+            <div class="stat-label">Suscripciones Premium</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🔔</div>
+            <div class="stat-number">@Model.TodayNotifications</div>
+            <div class="stat-label">Notificaciones Hoy</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📊</div>
+            <div class="stat-number">@Model.ActiveSubscriptions</div>
+            <div class="stat-label">Suscripciones Activas</div>
+        </div>
+    </div>
+
+    <!-- Actividad reciente -->
+    <div class="details-grid">
+        <div class="admin-section">
+            <h4><i class="fas fa-music"></i> Música Reciente</h4>
+            @if (Model.RecentMusics.Any())
+            {
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <tbody>
+                            @foreach (var music in Model.RecentMusics)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@music.Title</strong><br>
+                                        <small>por @music.Artist?.FirstName @music.Artist?.LastName</small>
+                                    </td>
+                                    <td>@music.UploadDate.ToString("dd/MM HH:mm")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p style="opacity: 0.7;">No hay música reciente</p>
+            }
+        </div>
+
+        <div class="admin-section">
+            <h4><i class="fas fa-crown"></i> Suscripciones Recientes</h4>
+            @if (Model.RecentSubscriptions.Any())
+            {
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <tbody>
+                            @foreach (var subscription in Model.RecentSubscriptions)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@subscription.SubscriptionPlan?.Name</strong><br>
+                                        <small>Usuario ID: @subscription.UserId</small><br/>
+                                        <small>Nombre : @subscription.User!.FirstName @subscription.User!.LastName</small><br />
+                                        <small>Correo: @subscription.User!.Email</small><br/>
+                                    </td>
+                                    <td>@subscription.StartDate.ToString("dd/MM")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p style="opacity: 0.7;">No hay suscripciones recientes</p>
+            }
+        </div>
+    </div>
+</div>

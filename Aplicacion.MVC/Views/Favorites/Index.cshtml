@@ -1,0 +1,145 @@
+﻿@model IEnumerable<object>
+@{
+    ViewData["Title"] = "Mis Favoritos";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var currentSection = ViewBag.CurrentSection?.ToString() ?? "musics";
+    var favoriteMusics = ViewBag.FavoriteMusics as List<Aplicacion.Modelos.Musica> ?? new List<Aplicacion.Modelos.Musica>();
+    var favoriteArtists = ViewBag.FavoriteArtists as List<Aplicacion.Modelos.Identity.User> ?? new List<Aplicacion.Modelos.Identity.User>();
+}
+
+<link rel="stylesheet" href="~/css/favorites.css" />
+
+<div class="favorites-container">
+    <div class="favorites-header">
+        <h1><i class="fas fa-heart"></i> Mis Favoritos</h1>
+        <p>Tu música y artistas preferidos en un solo lugar</p>
+    </div>
+
+    <!-- Tabs de navegación -->
+    <div class="favorites-tabs">
+        <a href="@Url.Action("Index")" class="favorites-tab @(currentSection == "musics" ? "active" : "")">
+            <i class="fas fa-music"></i> Música Favorita (@favoriteMusics.Count)
+        </a>
+        <a href="@Url.Action("Artists")" class="favorites-tab @(currentSection == "artists" ? "active" : "")">
+            <i class="fas fa-microphone"></i> Artistas Favoritos (@favoriteArtists.Count)
+        </a>
+    </div>
+
+    @if (currentSection == "musics")
+    {
+        <!-- Sección de Música Favorita -->
+        @if (favoriteMusics.Any())
+        {
+            <div class="favorites-grid">
+                @foreach (var music in favoriteMusics)
+                {
+                    <div class="favorite-card">
+                        <div class="favorite-info">
+                            <h3>@music.Title</h3>
+                            <p><i class="fas fa-user"></i> @music.Artist?.FirstName @music.Artist?.LastName</p>
+                            <p><i class="fas fa-clock"></i> @(music.Duration ?? "N/A")</p>
+                            <p><span class="genre-badge">@music.Genre</span></p>
+                            @if (music.Album != null)
+                            {
+                                <p><i class="fas fa-album-collection"></i> Álbum: @music.Album.Name</p>
+                            }
+                        </div>
+                        <div class="favorite-actions">
+                            <button onclick="playMusic('@music.FilePath', '@music.Title', '@music.Artist?.FirstName @music.Artist?.LastName')" class="btn-favorite btn-play">
+                                <i class="fas fa-play"></i> Reproducir
+                            </button>
+                            <a href="@Url.Action("Details", "Musics", new { id = music.Id })" class="btn-favorite btn-view">
+                                <i class="fas fa-info-circle"></i> Detalles
+                            </a>
+                            <a href="@Url.Action("DeleteMusic", new { musicId = music.Id, returnUrl = Context.Request.Path })" class="btn-favorite btn-remove">
+                                <i class="fas fa-heart-broken"></i> Quitar
+                            </a>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="empty-favorites">
+                <i class="fas fa-heart"></i>
+                <h3>No tienes música favorita</h3>
+                <p>Explora y marca tus canciones favoritas con ❤️</p>
+                <a href="@Url.Action("Search", "Musics")" class="btn-favorite btn-play">
+                    <i class="fas fa-search"></i> Explorar Música
+                </a>
+            </div>
+        }
+    }
+    else
+    {
+        <!-- Sección de Artistas Favoritos -->
+        @if (favoriteArtists.Any())
+        {
+            <div class="favorites-grid">
+                @foreach (var artist in favoriteArtists)
+                {
+                    <div class="favorite-card">
+                        <div class="favorite-info">
+                            <h3>@artist.FirstName @artist.LastName</h3>
+                            <p><i class="fas fa-envelope"></i> @artist.Email</p>
+                            <p><i class="fas fa-calendar"></i> Miembro desde @artist.RegistrationDate.ToString("MMMM yyyy")</p>
+                            <div class="artist-stats" style="display: flex; justify-content: space-around; margin: 10px 0; padding: 10px 0; border-top: 1px solid rgba(255,255,255,0.1);">
+                                <div style="text-align: center;">
+                                    <div style="font-weight: bold; color: #4ecdc4;">@(artist.Musics?.Count ?? 0)</div>
+                                    <div style="font-size: 0.8rem; opacity: 0.7;">Canciones</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-weight: bold; color: #4ecdc4;">@(artist.Albums?.Count ?? 0)</div>
+                                    <div style="font-size: 0.8rem; opacity: 0.7;">Álbumes</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="favorite-actions">
+                            <a href="@Url.Action("Search", "Musics", new { query = artist.FirstName + " " + artist.LastName })" class="btn-favorite btn-play">
+                                <i class="fas fa-music"></i> Catálogo
+                            </a>
+
+                            <form asp-controller="Follows" asp-action="FollowArtist" method="post" style="display: inline-flex; flex: 1;">
+                                <input type="hidden" name="artistId" value="@artist.Id" />
+                                <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                                <button type="submit" class="btn-favorite btn-view">
+                                    <i class="fas fa-user-plus"></i> Seguir
+                                </button>
+                            </form>
+
+                            <a href="@Url.Action("DeleteArtist", new { artistId = artist.Id, returnUrl = Context.Request.Path })" class="btn-favorite btn-remove">
+                                <i class="fas fa-heart-broken"></i> Quitar
+                            </a>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="empty-favorites">
+                <i class="fas fa-microphone"></i>
+                <h3>No tienes artistas favoritos</h3>
+                <p>Descubre artistas increíbles y márcalos como favoritos</p>
+                <a href="@Url.Action("Discover", "Follows")" class="btn-favorite btn-play">
+                    <i class="fas fa-compass"></i> Descubrir Artistas
+                </a>
+            </div>
+        }
+    }
+</div>
+
+<script>
+    // Función para reproducir música (integración con tu reproductor existente)
+    function playMusic(filePath, title, artist) {
+        if (typeof window.setCurrentTrack === 'function') {
+            window.setCurrentTrack('/files/' + filePath, title, artist);
+            window.playAudio();
+        } else {
+            // Fallback si no existe el reproductor
+            alert('Reproduciendo: ' + title + ' - ' + artist);
+        }
+    }
+</script>

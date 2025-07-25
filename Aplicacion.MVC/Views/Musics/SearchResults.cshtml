@@ -1,0 +1,672 @@
+﻿@model IEnumerable<Aplicacion.Modelos.Musica>
+
+@{
+    ViewData["Title"] = "Resultados de búsqueda";
+
+    // Agrupar resultados
+    var musicsByTitle = Model.Where(m =>
+        m.Title.Contains(ViewBag.SearchQuery as string, StringComparison.OrdinalIgnoreCase)
+    ).ToList();
+
+    var musicsByArtist = Model.Where(m =>
+        (m.Artist?.FirstName + " " + m.Artist?.LastName).Contains(ViewBag.SearchQuery as string, StringComparison.OrdinalIgnoreCase) ||
+        m.Artist?.FirstName.Contains(ViewBag.SearchQuery as string, StringComparison.OrdinalIgnoreCase) == true ||
+        m.Artist?.LastName.Contains(ViewBag.SearchQuery as string, StringComparison.OrdinalIgnoreCase) == true
+    ).Where(m => !musicsByTitle.Contains(m)).ToList();
+}
+
+<div class="container mt-4">
+    <form style="display: none;">
+        @Html.AntiForgeryToken()
+    </form>
+    <div class="mb-4">
+        @if (ViewBag.ShowingAll == true)
+        {
+            <h2><i class="fas fa-music"></i> Toda la música disponible</h2>
+            <p class="text-muted">
+                Explora @ViewBag.ResultCount canción(es) disponible(s)
+            </p>
+        }
+        else
+        {
+            <h2>Resultados de búsqueda</h2>
+            <p class="text-muted">
+                @ViewBag.ResultCount resultado(s) para "@ViewBag.SearchQuery"
+            </p>
+        }
+    </div>
+
+    @if (Model.Any())
+    {
+        <!-- Sección: Coincidencias por Artista -->
+        @if (musicsByArtist.Any())
+        {
+            <div class="search-section mb-5">
+                <div class="section-header">
+                    <h4><i class="fas fa-user text-primary"></i> Artistas</h4>
+                    <span class="badge bg-primary">@musicsByArtist.Count resultado(s)</span>
+                </div>
+
+                <div class="music-list compact">
+                    @foreach (var music in musicsByArtist.Take(3))
+                    {
+                        <div class="music-item">
+                            <div class="music-info">
+                                <div class="music-cover artist-cover">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div class="music-details">
+                                    <h6 class="music-title">@music.Title</h6>
+                                    <p class="music-meta">
+                                        <strong>@music.Artist?.FirstName @music.Artist?.LastName</strong> • @music.Genre.ToString()
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="music-actions">
+                                <button class="play-btn-small"
+                                        onclick="playMusic(@music.Id, '@music.Title', '@music.Artist?.FirstName @music.Artist?.LastName', '/files/@music.FilePath'); event.stopPropagation();">
+                                    <i class="fas fa-play"></i>
+                                </button>
+
+                                @if (User.Identity.IsAuthenticated)
+                                {
+                                    <button class="playlist-btn-small" onclick="event.stopPropagation(); showAddToPlaylistModal(@music.Id, '@music.Title');" title="Agregar a Playlist">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                @if (musicsByArtist.Count > 3)
+                {
+                    <div class="text-center mt-3">
+                        <button class="btn btn-outline-primary btn-sm" onclick="showMoreArtists()">
+                            Ver @(musicsByArtist.Count - 3) más
+                        </button>
+                    </div>
+                }
+            </div>
+        }
+
+        <!-- Sección: Coincidencias por Título (Principal) -->
+        @if (musicsByTitle.Any())
+        {
+            <div class="search-section">
+                <div class="section-header">
+                    <h4><i class="fas fa-music text-success"></i> Canciones</h4>
+                    <span class="badge bg-success">@musicsByTitle.Count resultado(s)</span>
+                </div>
+
+                <div class="music-list">
+                    @foreach (var music in musicsByTitle)
+                    {
+                        <div class="music-item">
+                            <div class="music-info">
+                                <div class="music-cover">
+                                    <i class="fas fa-music"></i>
+                                </div>
+                                <div class="music-details">
+                                    <h5 class="music-title">@music.Title</h5>
+                                    <p class="music-meta">
+                                        <strong>Artista:</strong> @music.Artist?.FirstName @music.Artist?.LastName<br>
+                                        <strong>Género:</strong> @music.Genre.ToString()
+                                    </p>
+                                    @if (!string.IsNullOrEmpty(music.Description))
+                                    {
+                                        <p class="music-description">
+                                            @(music.Description.Length > 80 ? music.Description.Substring(0, 80) + "..." : music.Description)
+                                        </p>
+                                    }
+                                </div>
+                            </div>
+                            <div class="music-actions">
+                                <button class="play-btn"
+                                        onclick="playMusic(@music.Id, '@music.Title', '@music.Artist?.FirstName @music.Artist?.LastName', '/files/@music.FilePath', event);">
+                                    <i class="fas fa-play"></i>
+                                </button>
+
+                                @if (User.Identity.IsAuthenticated)
+                                {
+                                    <button class="playlist-btn" onclick="event.stopPropagation(); showAddToPlaylistModal(@music.Id, '@music.Title');" title="Agregar a Playlist">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+
+                                    @if (User.IsInRole("users"))
+                                    {
+
+                                        
+                                        <form asp-controller="Downloads" asp-action="DownloadMusic" method="post" style="display: inline;">
+                                            <input type="hidden" name="musicId" value="@music.Id" />
+                                            <button type="submit" class="btn btn-success btn-sm">
+                                                <i class="fas fa-download"></i> Añadir Descarga
+                                            </button>
+                                        </form>
+                                        <div class="music-favorite-actions" style="margin-top: 10px;">
+                                            <form asp-controller="Favorites" asp-action="AddMusic" method="post" style="display: inline;">
+                                                <input type="hidden" name="musicId" value="@music.Id" />
+                                                <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                    <i class="fas fa-heart"></i> Favorito
+                                                </button>
+                                            </form>
+
+                                            <form asp-controller="Favorites" asp-action="AddArtist" method="post" style="display: inline;">
+                                                <input type="hidden" name="artistId" value="@music.Artist.Id" />
+                                                <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                                                <button type="submit" class="btn btn-outline-warning btn-sm">
+                                                    <i class="fas fa-star"></i> Artista Favorito
+                                                </button>
+                                            </form>
+                                        </div>
+
+                                    }
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        @if (!musicsByTitle.Any() && !musicsByArtist.Any())
+        {
+            <div class="no-results">
+                <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                <h4>No se encontraron resultados exactos</h4>
+                <p class="text-muted">Intenta con palabras diferentes</p>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="no-results">
+            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+            <h4>No se encontraron resultados</h4>
+            <p class="text-muted">
+                No hay músicas que coincidan con "@ViewBag.SearchQuery"
+            </p>
+            <a asp-action="Index" class="btn btn-primary mt-3">
+                Ver todas las músicas
+            </a>
+        </div>
+    }
+
+    @if (User.Identity.IsAuthenticated)
+    {
+        <div class="modal fade" id="addToPlaylistModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-list"></i> Agregar a Playlist
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Agregar "<span id="songTitle"></span>" a:</p>
+                        <div id="playlistsList">
+                            <div class="text-center">
+                                <i class="fas fa-spinner fa-spin"></i> Cargando playlists...
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <a asp-controller="Playlists" asp-action="Create" class="btn btn-success">
+                            <i class="fas fa-plus"></i> Crear Nueva Playlist
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+
+</div>
+
+<style>
+    .playlist-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #007bff;
+        border: none;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 12px;
+        margin-left: 8px;
+    }
+
+        .playlist-btn:hover {
+            background: #0056b3;
+            transform: scale(1.05);
+        }
+
+    .playlist-btn-small {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: #007bff;
+        border: none;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 10px;
+        margin-left: 6px;
+    }
+
+        .playlist-btn-small:hover {
+            background: #0056b3;
+            transform: scale(1.05);
+        }
+
+
+    .search-section {
+        margin-bottom: 2rem;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #f0f0f0;
+    }
+
+        .section-header h4 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+
+    .music-list {
+        background: #fff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+        .music-list.compact .music-item {
+            padding: 12px 16px;
+        }
+
+        .music-list.compact .music-cover {
+            width: 40px;
+            height: 40px;
+        }
+
+        .music-list.compact .music-title {
+            font-size: 14px;
+        }
+
+        .music-list.compact .music-meta {
+            font-size: 12px;
+        }
+
+    .music-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        border-bottom: 1px solid #f0f0f0;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+        .music-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .music-item:last-child {
+            border-bottom: none;
+        }
+
+    .music-info {
+        display: flex;
+        align-items: center;
+        flex: 1;
+    }
+
+    .music-cover {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 20px;
+        margin-right: 16px;
+        flex-shrink: 0;
+    }
+
+    .artist-cover {
+        background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        color: #333;
+    }
+
+    .music-details {
+        flex: 1;
+    }
+
+    .music-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin: 0 0 4px 0;
+        color: #1a1a1a;
+    }
+
+    .music-meta {
+        font-size: 14px;
+        color: #666;
+        margin: 0 0 4px 0;
+        line-height: 1.3;
+    }
+
+    .music-description {
+        font-size: 13px;
+        color: #888;
+        margin: 0;
+        font-style: italic;
+    }
+
+    .music-actions {
+        display: flex;
+        align-items: center;
+    }
+
+    .play-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #1db954;
+        border: none;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 14px;
+    }
+
+        .play-btn:hover {
+            background: #1ed760;
+            transform: scale(1.05);
+        }
+
+    .play-btn-small {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #1db954;
+        border: none;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 12px;
+    }
+
+        .play-btn-small:hover {
+            background: #1ed760;
+            transform: scale(1.05);
+        }
+
+    .no-results {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+        .no-results h4 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .no-results .text-muted {
+            font-size: 16px;
+        }
+
+    .playlist-item {
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+        .playlist-item:hover {
+            background-color: #f8f9fa;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+    .playlist-info {
+        flex: 1;
+    }
+        .playlist-info strong {
+            font-size: 16px;
+            color: #333;
+        }
+        .playlist-info .text-muted {
+            font-size: 14px;
+            color: #666;
+		}
+
+
+    .music-favorite-actions .btn {
+        margin-right: 5px;
+        font-size: 0.8rem;
+        padding: 4px 8px;
+    }
+
+    /* Widget de favoritos en sidebar */
+    .favorites-widget {
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .recent-favorites {
+        max-height: 120px;
+        overflow-y: auto;
+        margin: 10px 0;
+    }
+
+        .recent-favorites .favorite-item {
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.8rem;
+        }
+
+            .recent-favorites .favorite-item:last-child {
+                border-bottom: none;
+            }
+
+    /* Responsive para favoritos */
+    @@media (max-width: 768px) {
+        .favorites-tabs
+
+    {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .favorites-tab {
+        width: 80%;
+        text-align: center;
+        margin-bottom: 10px;
+    }
+
+    .favorites-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .favorite-actions {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+        .favorite-actions .btn-favorite {
+            width: 100%;
+            text-align: center;
+        }
+
+    }
+</style>
+
+<script>
+    function showMoreArtists() {
+        // Expansión 
+        alert('Funcionalidad para mostrar más artistas - por implementar');
+    }
+
+    let currentMusicId = 0;
+
+    function showAddToPlaylistModal(musicId, songTitle) {
+        currentMusicId = musicId;
+        document.getElementById('songTitle').textContent = songTitle;
+        // Cargar playlists del usuario
+        loadUserPlaylists();
+        // Mostrar modal
+        new bootstrap.Modal(document.getElementById('addToPlaylistModal')).show();
+    }
+
+    function loadUserPlaylists() {
+        const container = document.getElementById('playlistsList');
+        container.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando playlists...</div>';
+
+        // Llamada AJAX para obtener playlists del usuario
+        fetch('/Playlists/GetUserPlaylists')
+            .then(response => response.json())
+            .then(data => {
+                container.innerHTML = '';
+
+                if (data.error) {
+                    container.innerHTML = '<p class="text-danger">Error: ' + data.error + '</p>';
+                    return;
+                }
+
+                if (data.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center p-3">
+                            <i class="fas fa-list fa-2x text-muted mb-2"></i>
+                            <p class="text-muted">No tienes playlists aún.</p>
+                            <p class="text-muted">Crea tu primera playlist para agregar música.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                data.forEach(playlist => {
+                    const playlistItem = document.createElement('div');
+                    playlistItem.className = 'd-flex justify-content-between align-items-center p-3 border rounded mb-2 playlist-item';
+                    playlistItem.innerHTML = `
+                        <div class="playlist-info">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-list text-success me-2"></i>
+                                <div>
+                                    <strong>${playlist.name}</strong>
+                                    <div class="small text-muted">
+                                        ${playlist.description || 'Sin descripción'} •
+                                        ${playlist.songsCount} canción(es) •
+                                        ${playlist.isPublic ? '🌐 Pública' : '🔒 Privada'}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary btn-sm" onclick="addToPlaylist(${playlist.id}, '${playlist.name}')">
+                            <i class="fas fa-plus"></i> Agregar
+                        </button>
+
+                    `;
+                    container.appendChild(playlistItem);
+                });
+            })
+            .catch(error => {
+                console.error('Error loading playlists:', error);
+                container.innerHTML = '<p class="text-danger">Error al cargar playlists. Intenta de nuevo.</p>';
+            });
+    }
+
+    
+    function addToPlaylist(playlistId, playlistName) {
+        // Mostrar loading en el botón
+        const button = event.target.closest('button');
+        const originalContent = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Agregando...';
+        button.disabled = true;
+
+        // Crear FormData para enviar POST
+        const formData = new FormData();
+        formData.append('playlistId', playlistId);
+        formData.append('musicId', currentMusicId);
+
+        // Obtener token antiforgery
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        if (token) {
+            formData.append('__RequestVerificationToken', token);
+        }
+
+        fetch('/PlaylistMusic/AddToPlaylist', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (response.ok) {
+                // Éxito
+                button.innerHTML = '<i class="fas fa-check text-success"></i> ¡Agregada!';
+                button.className = 'btn btn-success btn-sm';
+
+                // Cerrar modal después de 1 segundo
+                setTimeout(() => {
+                    bootstrap.Modal.getInstance(document.getElementById('addToPlaylistModal')).hide();
+                    showNotification(`Música agregada a "${playlistName}" exitosamente`, 'success');
+                }, 1000);
+            } else {
+                // Error
+                button.innerHTML = originalContent;
+                button.disabled = false;
+                showNotification('Error al agregar música a la playlist', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            button.innerHTML = originalContent;
+            button.disabled = false;
+            showNotification('Error de conexión', 'error');
+        });
+    }
+
+    
+    function showNotification(message, type) {
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        const icon = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle';
+
+        const notification = document.createElement('div');
+        notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+        notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        notification.innerHTML = `
+            <i class="${icon}"></i> ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+
+        document.body.appendChild(notification);
+
+        // Auto-remover después de 5 segundos
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 5000);
+    }
+</script>
